@@ -12,6 +12,8 @@
     nodes_calculated_data: []
     nodes_fqdn_and_mac: []
     completed_list: []
+    final_data_object: {}
+
     
     masters_fqdn_mac_template:
       node_fqdn: '{{ node_type }}-{{ (masters_mac_list.index((nodes_calculated_data | list)[item | int].mac_address ) | string )}}{{ cluster_domain }}'
@@ -104,5 +106,12 @@
      #item | union (nodes_fqdn_and_mac | selectattr("mac", "equalto", "item.mac_address"))
       loop: "{{ nodes_calculated_data | list }}"
 
+    - set_fact:
+        my_dict: '{"domain_data": "{{ cluster_domain}}","dns_data":{{ completed_list | to_nice_json }} }'
     - debug:
-        var: completed_list
+        var: my_dict
+    
+    - name: Saving the list for dns check
+      copy:
+        content: "{{ my_dict | from_json | to_nice_json }}"
+        dest: /tmp/dns-test.json
