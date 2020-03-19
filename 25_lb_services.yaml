@@ -1,0 +1,112 @@
+---
+- name: Haproxy  configuration
+  hosts: lb 
+  vars_files: 
+    - vars/vars.yaml
+    - vars/downloads.yaml
+    - vars/lb_firewall.yaml
+  vars:
+    nodes: "{{ cluster['masters'] + cluster['workers']  + cluster['bootstrap'] }}"
+    number_of_nodes: "{{ nodes | length }}"
+    nodes_calculated_data: []
+    ip_template:
+      primary_ip: "{{  networking.internal_network[:-1] + item }}"
+      mac_address: "{{ nodes[ (number_of_nodes | int ) - (item | int) ].mac }}"
+    internal_ip_and_mask: "{{ networking.internal_network_ip }}/{{ networking.internal_network_netmask }}"
+          
+  tasks:
+    
+    - name: Calculating number of node (LoadBalancer)
+      set_fact:
+        number_of_nodes: "{{ nodes | length }}"
+    - set_fact:
+        nodes_calculated_data: "{{ nodes_calculated_data + [ip_template] }}"
+      with_sequence: "start=3 count={{ number_of_nodes }}"
+    
+    - block:
+
+         - name: Checking internal network interfaces
+           fail: 
+            msg: "{{ networking.internal_interface_name }} not found in {{ ansible_facts.interfaces }}"
+           when: networking.internal_interface_name not in ansible_facts.interfaces
+
+
+         #https://access.redhat.com/discussions/1455033
+
+         - name: Setting static ip configuration
+           command: > 
+              nmcli con mod {{ networking.internal_interface_name }} 
+              ipv4.address "{{ lb.lb_internal_network_ip }}/{{ internal_ip_and_mask | ipaddr('prefix') }}"
+              connection.zone internal
+         
+         - name: Refreshing {{ networking.internal_interface_name }}
+           shell:  nmcli con down "{{ networking.internal_interface_name }}"; nmcli con up "{{ networking.internal_interface_name }}"
+       
+
+
+         - name: Adding interface {{ networking.internal_interface_name }} to firewall internal zone  
+           firewalld:
+             zone: internal
+             interface: "{{ networking.internal_interface_name }}"
+             permanent: yes
+             state: enabled
+
+         - name: Allow service for internal zone
+           firewalld:
+             zone: internal
+             state: enabled
+             permanent: yes
+             service: "{{ item }}"
+           loop: "{{ services }}"
+
+         - name: Allow service for public zone
+           firewalld:
+             state: enabled
+             permanent: yes
+             service: "{{ item }}"
+           loop: "{{ services }}"
+
+         - name: Allow ports for internal zone
+           firewalld:
+             zone: internal
+             state: enabled
+             permanent: yes
+             port: "{{ item }}"
+           loop: "{{ internal_zone_port }}"
+
+         - name: Allow service for public zone
+           firewalld:
+             state: enabled
+             permanent: yes
+             port: "{{ item }}"
+           loop: "{{ public_zone_port }}"
+    
+         - name: Reload firewalld service
+           service:
+             name: firewalld
+             state: reloaded 
+                   
+         - name: Enabling selinux boolean for haproxy
+           seboolean:
+             name: haproxy_connect_any
+             state: yes
+             persistent: yes 
+    
+         - name: Firing haproxy template
+           template:
+             src: templates/haproxy.j2
+             dest: /etc/haproxy/haproxy.cfg
+
+         - name: Reload haproxy service
+           service:
+             name: haproxy
+             state: restarted
+             enabled: true
+        
+      become: True
+
+    
+
+  
+    
+    

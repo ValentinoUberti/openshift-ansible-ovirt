@@ -1,0 +1,5 @@
+[lb]
+lb.example.com
+
+[bastion]
+bastion.example.com

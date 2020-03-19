@@ -1,0 +1,100 @@
+- name: Bastion services configuration
+  hosts: bastion
+  gather_facts: no
+  vars_files: 
+    - vars/vars.yaml
+    - vars/downloads.yaml
+    - vars/pxe_menu.yaml
+  vars:
+    nodes: "{{ cluster['masters'] + cluster['workers']  +   cluster['bootstrap'] }}"
+    number_of_nodes: "{{ nodes | length }}"
+    nodes_calculated_data: []
+    ip_template:
+      primary_ip: "{{  networking.internal_network[:-1] + item }}"
+      mac_address: "{{ nodes[ (number_of_nodes | int ) - (item | int) ].mac }}"
+      reverse_dns: "{{ ( networking.internal_network[:-1] + item ) | ipaddr('revdns')  }}"
+          
+  tasks:
+    
+    - name: Calculating number of node (Bastion)
+      set_fact:
+        number_of_nodes: "{{ nodes | length }}"
+    - name: Setting calculated data (Bastion)
+      set_fact:
+        nodes_calculated_data: "{{ nodes_calculated_data + [ip_template] }}"
+      with_sequence: "start=3 count={{ number_of_nodes }}"
+    
+    - block:
+         
+        - name: Ensuring tftp boot directory exists
+          file:
+            state: directory
+            path: /var/lib/tftpboot/pxelinux.cfg
+ 
+        - name: Copy pxelinux.0 file
+          command: cp /usr/share/syslinux/{{ item }} /var/lib/tftpboot/
+          loop:
+            - menu.c32
+            - chain.c32
+            - ldlinux.c32
+            - libcom32.c32
+            - ldlinux.c32
+            - pxelinux.0
+            - libutil.c32
+ 
+        - name: Creating seelinux rules for dnsmasq service
+          copy:
+            src: files/my-dnsmasq.pp
+            dest: /tmp
+
+        - name: Apply seelinux rules for dnsmasq service
+          command: semodule -X 300 -i /tmp/my-dnsmasq.pp 
+
+        - name: Delete selinux temp file
+          file:
+            path: "{{ item }}"
+            state: absent
+          loop:
+            - /tmp/my-dnsmasq.pp
+            - /tmp/my-dnsmasq.te 
+ 
+        - name: Creating nginx subdirectory
+          file:
+            state: directory
+            path: /usr/share/nginx/html/metal
+
+        - name: Firing dnsmasq template
+          template:
+            src: templates/dnsmasq.j2
+            dest: /etc/dnsmasq.conf
+
+        - name: Firing pxe boot template
+          template:
+            src: templates/pxeboot_default.j2
+            dest: /var/lib/tftpboot/pxelinux.cfg/default
+    
+        - name: Reload dnsmasq service
+          service:
+            name: dnsmasq
+            state: restarted
+            enabled: true
+
+        - name: Configure {{ networking.public_interface_name }} to use {{ networking.internal_network_ip }} as DNS server
+          command: nmcli con mod {{ networking.public_interface_name }} ipv4.dns "{{ networking.internal_network_ip }}" 
+
+        - name: Refreshing {{ networking.public_interface_name }}
+          shell: nmcli con down "{{ networking.public_interface_name }}"; nmcli con up "{{ networking.public_interface_name }}"
+                    
+        - name: Reload http service
+          service:
+            name: nginx
+            state: restarted
+            enabled: true
+        
+      become: True
+
+    
+
+  
+    
+    

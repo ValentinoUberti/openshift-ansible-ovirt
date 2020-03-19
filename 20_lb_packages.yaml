@@ -1,0 +1,11 @@
+---
+- name: Load balancer packages
+  hosts: lb 
+  become: True
+  tasks:
+     
+    - name: Installing required packages
+      package:
+        name:
+          - haproxy
+        state: present 

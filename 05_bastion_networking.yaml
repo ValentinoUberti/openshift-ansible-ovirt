@@ -1,0 +1,80 @@
+---
+- name: Bastion networking playbook 
+  hosts: bastion 
+  become: True
+  vars_files:
+    - vars/vars.yaml
+    - vars/services.yaml
+  vars:
+    internal_ip_and_mask: "{{ networking.internal_network_ip }}/{{ networking.internal_network_netmask }}" 
+  
+  tasks:
+    - name: Checking Bastion internal network interfaces
+      fail: 
+        msg: "{{ networking.internal_interface_name }} not found in {{ ansible_facts.interfaces }}"
+      when: networking.internal_interface_name not in ansible_facts.interfaces
+    
+    - name: Adding interface {{ networking.internal_interface_name }} to internal zone
+      command: nmcli con mod {{ networking.internal_interface_name }} connection.zone internal     
+
+    - name: Setting Bastion static ip configuration
+      command: > 
+                nmcli con mod {{ networking.internal_interface_name }} 
+                ipv4.address "{{ networking.internal_network_ip }}/{{ internal_ip_and_mask | ipaddr('prefix') }}"
+                autoconnect yes ipv4.method manual
+
+    
+    - name: Adding Bastion interface {{ networking.internal_interface_name }} to firewall internal zone  
+      firewalld:
+        zone: internal
+        interface: "{{ networking.internal_interface_name }}"
+        permanent: yes
+        state: enabled
+
+    - name: Allow required service for internal zone
+      firewalld:
+        zone: internal
+        state: enabled
+        permanent: yes
+        service: "{{ item }}"
+      loop: "{{ services }}"
+
+    - name: Allow tftp and pxe ports
+      firewalld:
+        zone: internal
+        state: enabled
+        permanent: yes
+        port: "{{ item }}"
+      loop:
+        - "69/udp"
+        - "69/tcp"
+        - "68/tcp"
+        - "68/udp"
+        - "4011/tcp"
+        - "4011/udp"
+
+    - name: Enabling masquerading
+      command: >
+               firewall-cmd --direct --permanent --add-rule 
+               ipv4 nat POSTROUTING 0 -o {{ networking.public_interface_name }} -j MASQUERADE
+
+    - name: Enabling masquerading on internal interface
+      command: >
+               firewall-cmd --add-masquerade --permanent --zone internal
+
+    - name: Setting up port forwarding from {{ networking.internal_interface_name }} to {{ networking.public_interface_name }}
+      command: >
+               firewall-cmd --direct --permanent --add-rule ipv4 filter 
+               FORWARD 0 -i {{ networking.internal_interface_name }} -o {{ networking.public_interface_name }}  -j ACCEPT
+
+    - name: Setting up port forwarding from {{ networking.public_interface_name }} to {{ networking.internal_interface_name }}
+      command: >
+               firewall-cmd --direct --permanent --add-rule ipv4 filter 
+               FORWARD 0 -i {{ networking.public_interface_name }} -o {{ networking.internal_interface_name }} -m state --state RELATED,ESTABLISHED -j ACCEPT
+   
+    - name: Reload Bastion firewalld service
+      service:
+        name: firewalld
+        state: reloaded 
+        
+    

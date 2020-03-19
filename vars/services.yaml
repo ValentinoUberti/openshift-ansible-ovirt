@@ -1,0 +1,8 @@
+services:
+  - http
+  - dns
+  - dhcp
+  - mountd
+  - nfs
+  - rpc-bind
+  

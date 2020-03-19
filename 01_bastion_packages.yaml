@@ -1,0 +1,18 @@
+---
+- name: Bastion packages installer
+  hosts: bastion 
+  become: True
+  tasks:
+     
+    - name: Installing required packages for Bastion Vm
+      package:
+        name:
+          - syslinux
+          - dnsmasq-2.80-10.fc31.x86_64 
+          - nginx
+          - nfs-utils
+          - cronie
+          - cronie-anacron
+          - python-netaddr
+        state: present
+

@@ -1,0 +1,120 @@
+{% set masters_mac_list = cluster["masters"] | map(attribute='mac') | list %}
+{% set workers_mac_list = cluster["workers"] | map(attribute='mac') | list %}
+{% set bootstrap_mac = cluster["bootstrap"] | map(attribute='mac') | list %}
+{% set cluster_domain = "." + cluster.name + "." + networking.domain_name %}
+global
+    log         127.0.0.1 local0
+    chroot      /var/lib/haproxy
+    pidfile     /var/run/haproxy.pid
+    maxconn     4000
+    user        haproxy
+    group       haproxy
+    daemon
+    stats socket /var/lib/haproxy/stats
+
+defaults
+    mode                    http
+    log                     global
+    option                  httplog
+    option                  dontlognull
+    #option http-server-close
+    option forwardfor       except 127.0.0.0/8
+    option                  redispatch
+    retries                 3
+    timeout http-request    10s
+    timeout queue           1m
+    timeout connect         10s
+    timeout client          1m
+    timeout server          1m
+    timeout http-keep-alive 10s
+    timeout check           10s
+    maxconn                 3000
+
+frontend openshift-api-server
+    bind *:6443
+    default_backend openshift-api-server
+    mode tcp
+    option tcplog
+
+backend openshift-api-server
+    balance source
+    mode tcp
+{%for node in masters_mac_list: %}
+{%for node_data in nodes_calculated_data: %}
+{%if node==node_data.mac_address: %}
+{% set host_fqdn=''.join(('master-',masters_mac_list.index(node_data.mac_address) | string ,cluster_domain)) %}
+    server {{ host_fqdn }} {{ node_data.primary_ip }}:6443 check
+{%endif%}
+{%endfor%}
+{%endfor%}
+{%for node in bootstrap_mac: %}
+{%for node_data in nodes_calculated_data: %}
+{%if node==node_data.mac_address: %}
+{% set host_fqdn=''.join(('bootstrap',cluster_domain)) %}
+    server {{ host_fqdn }} {{ node_data.primary_ip }}:6443 check
+{%endif%}
+{%endfor%}
+{%endfor%}
+
+frontend machine-config-server 
+    bind *:22623 
+    default_backend machine-config-server 
+    mode tcp 
+    option tcplog 
+
+backend machine-config-server 
+    balance source 
+    mode tcp 
+{%for node in masters_mac_list: %}
+{%for node_data in nodes_calculated_data: %}
+{%if node==node_data.mac_address: %}
+{% set host_fqdn=''.join(('master-',masters_mac_list.index(node_data.mac_address) | string ,cluster_domain)) %}
+    server {{ host_fqdn }} {{ node_data.primary_ip }}:22623 check
+{%endif%}
+{%endfor%}
+{%endfor%}
+{%for node in bootstrap_mac: %}
+{%for node_data in nodes_calculated_data: %}
+{%if node==node_data.mac_address: %}
+{% set host_fqdn=''.join(('bootstrap',cluster_domain)) %}
+    server {{ host_fqdn }} {{ node_data.primary_ip }}:22623 check
+{%endif%}
+{%endfor%}
+{%endfor%}
+
+frontend ingress-http
+    bind *:80
+    default_backend ingress-http
+    mode tcp
+    option tcplog
+
+backend ingress-http
+   balance source
+   mode tcp
+{%for node in workers_mac_list: %}
+{%for node_data in nodes_calculated_data: %}
+{%if node==node_data.mac_address: %}
+{% set host_fqdn=''.join(('worker-',workers_mac_list.index(node_data.mac_address) | string ,cluster_domain)) %}
+   server {{ host_fqdn }} {{ node_data.primary_ip }}:80 check
+{%endif%}
+{%endfor%}
+{%endfor%}
+
+
+frontend ingress-https
+    bind *:443
+    default_backend ingress-https
+    mode tcp
+    option tcplog
+
+backend ingress-https
+   balance source
+   mode tcp
+{%for node in workers_mac_list: %}
+{%for node_data in nodes_calculated_data: %}
+{%if node==node_data.mac_address: %}
+{% set host_fqdn=''.join(('worker-',workers_mac_list.index(node_data.mac_address) | string ,cluster_domain)) %}
+   server {{ host_fqdn }} {{ node_data.primary_ip }}:443 check
+{%endif%}
+{%endfor%}
+{%endfor%}
