@@ -24,7 +24,7 @@
       mac:  "{{ (nodes_calculated_data | list)[item | int].mac_address }}"
     
     bootstrap_fqdn_mac_template:
-      node_fqdn: '{{ node_type }}-{{ (bootstrap_mac_list.index((nodes_calculated_data | list)[item | int].mac_address ) | string )}}{{ cluster_domain }}'
+      node_fqdn: '{{ node_type }}{{ cluster_domain }}'
       mac:  "{{ (nodes_calculated_data | list)[item | int].mac_address }}"
     
     ip_template:

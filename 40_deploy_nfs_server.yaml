@@ -1,0 +1,34 @@
+- name: Bastion services configuration
+  hosts: bastion
+  gather_facts: no
+  become: True
+  vars_files: 
+    - vars/vars.yaml
+  tasks:
+    - name: Creating exports file
+      template:
+        src: templates/nfs_exports.j2
+        dest: /etc/exports.d/registry.exports
+
+    - name: Activating selinux boolean (virt_use_nfs)
+      seboolean:
+        name: virt_use_nfs
+        state: yes
+        persistent: yes
+
+    - name: Creating registry export
+      file:
+        state: directory
+        path: /exports/registry
+        mode: 0775
+
+    - name: Restarting nfs
+      service:
+        name: nfs-server
+        state: restarted
+        
+    - name: Deploy yaml config for creating registry PV
+      template:
+        src: templates/pv_registry.j2
+        dest: "{{ workspace_directory.base_path }}/pv_registry.yaml"
+      
