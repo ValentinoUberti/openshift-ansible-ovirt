@@ -106,10 +106,21 @@
         var:  internal_auth | from_json
     
     - set_fact:
-        final_secret: "{{ lookup('template','merge_pull_secret.j2') }}"
+        disconnected_secret: "{{ lookup('template','merge_pull_secret.j2') }}"
+
+    - name: Getting ssh public key
+      set_fact:
+        sshKey: "{{ lookup('file','~/.ssh/id_rsa.pub') }}"
+        
+    - name: Firing up install-config.yaml
+      template:
+        src: templates/install-config.j2
+        dest: "{{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}/install-config.yaml"
         
     - name: Combining local auth
       debug:
-        var: final_secret
+        var: disconnected_secret
+
+    
               
 
