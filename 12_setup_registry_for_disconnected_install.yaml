@@ -1,0 +1,93 @@
+---
+- name: Preparing for disconnected OCP installation
+  hosts: bastion
+  gather_facts: false 
+  become: true
+  vars_files:
+     - vars/vars.yaml
+     - vars/downloads.yaml
+     - vars/self_signed_certs.yaml
+  vars:
+    - username: registry
+    - password: sadlkfjsdafj23498jd
+  tasks:
+    - name: Creating required folder for {{ inventory_hostname }} registry
+      file:
+        state: directory
+        path: "{{ item }}"
+      loop:
+        - /opt/registry/auth
+        - /opt/registry/certs 
+        - /opt/registry/data
+
+    - name: Install python-passlib
+      package:
+        name: python-passlib
+        state: present
+      
+    - name: Generating htpaasswd user and password
+      command: htpasswd -bBc /opt/registry/auth/htpasswd {{ username }} {{ password }}
+
+    #- name: Generating htpaasswd user and password
+    #  htpasswd:
+    #    path: /opt/registry/auth/htpasswd
+    #    name: "{{ username }}"
+    #    password: "{{ password }}"
+    #    crypt_scheme: bcrypt
+
+    - name: Ensuring registry pod is not running
+      command: podman rm -f mirror-registry
+      failed_when: false
+
+    - name: Copying required certificate and key
+      command: cp {{ item }} /opt/registry/certs/
+      loop:
+        - "{{ pempath }}"
+        - "{{ crtpath }}"
+
+    - name: Setup firewall
+      firewalld:
+        port: 5000/tcp
+        permanent: yes
+        state: enabled
+    
+    - firewalld:
+        port: 5000/tcp
+        permanent: yes
+        state: enabled
+        zone: internal
+
+    - service:
+        name: firewalld
+        state: restarted
+
+    - name: Staring registry pod
+      template:
+        src: templates/podman_registry.j2
+        dest: /tmp/podman.sh
+        mode: a+x
+
+    - command: /tmp/podman.sh
+      
+     
+    
+
+    - name: Trusting certificate
+      command: cp {{ crtpath }} /etc/pki/ca-trust/source/anchors/
+
+    - command: update-ca-trust
+
+    
+    - name: Testing login to registry
+      uri:
+        url: https://{{ inventory_hostname }}:5000/v2/_catalog
+        method: GET
+        user: "{{ username }}"
+        password: "{{ password }}"
+        force_basic_auth: yes
+        return_content: yes
+        validate_certs: false
+      
+
+              
+
