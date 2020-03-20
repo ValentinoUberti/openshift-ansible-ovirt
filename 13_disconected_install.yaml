@@ -1,0 +1,86 @@
+---
+- name: Preparing for disconnected OCP installation
+  hosts: bastion
+  gather_facts: false 
+  become: true
+  vars_files:
+     - vars/vars.yaml
+     - vars/downloads.yaml
+     - vars/self_signed_certs.yaml
+  vars:
+    - dnsname: "{{ inventory_hostname }}"
+    - cert_dir: "{{ workspace_directory.base_path }}/certificates/{{ dnsname }}"
+    - crtpath: "{{ cert_dir }}/{{ dnsname }}.crt"
+    - pempath: "{{ cert_dir }}/{{ dnsname }}.pem"
+    - csrpath: "{{ cert_dir }}/{{ dnsname }}.csr"
+    - pfxpath: "{{ cert_dir }}/{{ dnsname }}.pfx"
+  
+  tasks:
+    - name: Ensure required packages are installed
+      package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - podman
+        - httpd-tools
+        - python-pip
+
+    - name: Installing pyopenssl
+      command: pip install pyopenssl
+
+    
+    - name: Refreshing certificates dir
+      file:
+        path: "{{ cert_dir }}"
+        state: absent
+    
+    - file:
+        path: "{{ cert_dir }}"
+        state: directory
+
+    - name: "Generate the private key file to sign the CSR"
+      openssl_privatekey:
+        path: "{{ pempath }}"
+        passphrase: "{{ private_key_password }}"
+        cipher: aes256
+
+    - name: "Generate the CSR file signed with the private key"
+      openssl_csr:
+        path: "{{ csrpath }}"
+        privatekey_path: "{{ pempath }}"
+        privatekey_passphrase: "{{ private_key_password }}"
+        common_name: "{{ dnsname }}"
+        country_name: IT
+        organization_name: ValeUbe
+        subject_alt_name: 'DNS:{{ dnsname }}'
+
+    - name: "Sign the CSR file as a CA to turn it into a certificate"
+      openssl_certificate:
+        path: "{{ crtpath }}"
+        privatekey_path: "{{ pempath }}"
+        privatekey_passphrase: "{{ private_key_password }}"
+        csr_path: "{{ csrpath }}"
+        provider: selfsigned
+
+    - name: "Convert the signed certificate into a PKCS12 file with the attached private key"
+      openssl_pkcs12:
+        action: export
+        path: "{{ pfxpath }}"
+        name: "{{ dnsname }}"
+        privatekey_path: "{{ pempath }}"
+        privatekey_passphrase: "{{ private_key_password }}"
+        passphrase: password
+        certificate_path: "{{ crtpath }}"
+        state: present
+
+    - name: Creating required folder for offline registry and certificates
+      file:
+        state: directory
+        path: "{{ item }}"
+      loop:
+        - /opt/registry/auth
+        - /opt/registry/certs 
+        - /opt/registry/data
+        - "{{ workspace_directory.base_path }}/certificates"
+          
+      

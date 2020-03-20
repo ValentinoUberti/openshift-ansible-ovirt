@@ -1,4 +1,4 @@
-- name: Bastion services configuration
+- name: Create nfs share and registry pv
   hosts: bastion
   gather_facts: no
   become: True
