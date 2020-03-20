@@ -88,6 +88,28 @@
         return_content: yes
         validate_certs: false
       
+    - name: Creating base64 user and pass
+      set_fact:
+        userPassBase64: "{{ ''.join((username,':',password)) | b64encode }}"
 
+    - set_fact:
+        pullJsonSecret: "{{ cluster.pullSecret | from_json }}"
+
+    - set_fact:
+        email: "{{ (pullJsonSecret.auths | json_query('*') | list)[0].email }}"
+
+    - set_fact:
+        internal_auth: "{{ lookup('template','templates/registry_auth.j2') | to_json }}"
+    
+    - name:
+      debug:
+        var:  internal_auth | from_json
+    
+    - set_fact:
+        final_secret: "{{ lookup('template','merge_pull_secret.j2') }}"
+        
+    - name: Combining local auth
+      debug:
+        var: final_secret
               
 
