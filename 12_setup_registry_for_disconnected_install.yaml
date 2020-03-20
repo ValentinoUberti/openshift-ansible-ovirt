@@ -39,12 +39,6 @@
       command: podman rm -f mirror-registry
       failed_when: false
 
-    - name: Copying required certificate and key
-      command: cp {{ item }} /opt/registry/certs/
-      loop:
-        - "{{ pempath }}"
-        - "{{ crtpath }}"
-
     - name: Setup firewall
       firewalld:
         port: 5000/tcp
@@ -69,15 +63,7 @@
 
     - command: /tmp/podman.sh
       
-     
-    
-
-    - name: Trusting certificate
-      command: cp {{ crtpath }} /etc/pki/ca-trust/source/anchors/
-
-    - command: update-ca-trust
-
-    
+         
     - name: Testing login to registry
       uri:
         url: https://{{ inventory_hostname }}:5000/v2/_catalog
@@ -111,15 +97,27 @@
     - name: Getting ssh public key
       set_fact:
         sshKey: "{{ lookup('file','~/.ssh/id_rsa.pub') }}"
-        
+
     - name: Firing up install-config.yaml
       template:
         src: templates/install-config.j2
         dest: "{{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}/install-config.yaml"
         
-    - name: Combining local auth
-      debug:
-        var: disconnected_secret
+    - name: Saving disconnected secret to {{ inventory_hostname }}
+      copy:
+        content: "{{ disconnected_secret }}"
+        dest: "/tmp/disconnected.json"
+
+    - name: Creating shell script for mirroring
+      template:
+        src: templates/registry_cloner.js
+        dest: /tmp/registry_cloner.sh
+        mode: +x
+
+    - name: Mirroring the registry
+      command: /tmp/registry_cloner.sh
+      
+        
 
     
               

@@ -30,30 +30,33 @@
     - file:
         path: "{{ cert_dir }}"
         state: directory
-
-    - name: "Generate the private key file to sign the CSR"
-      openssl_privatekey:
-        path: "{{ pempath }}"
-        force: true
-
-    - name: "Generate the CSR file signed with the private key"
-      openssl_csr:
-        path: "{{ csrpath }}"
-        privatekey_path: "{{ pempath }}"
-        common_name: "{{ dnsname }}"
-        country_name: IT
-        organization_name: ValeUbe
-        subject_alt_name: 'DNS:{{ dnsname }}'
-
-    - name: "Sign the CSR file as a CA to turn it into a certificate"
-      openssl_certificate:
-        path: "{{ crtpath }}"
-        privatekey_path: "{{ pempath }}"
-        csr_path: "{{ csrpath }}"
-        provider: selfsigned
-
    
+    - name: Create Root CA Key
+      command: openssl genrsa -out {{ cert_dir }}/rootCA.key 4096
+
+    - name: Create and self sign the Root Certificate
+      command: openssl req -x509 -new -nodes -key {{ cert_dir }}/rootCA.key -sha256 -days 1024 -out {{ cert_dir }}/rootCA.crt -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com"
+   
+    - name: Create the key for {{ inventory_hostname }}
+      command: openssl genrsa -out {{ cert_dir }}/{{ inventory_hostname }}.key 2048
+      
+
+    - name: Create CSR for {{ inventory_hostname }}
+      command: openssl req -new -sha256 -key {{ cert_dir }}/{{ inventory_hostname }}.key -subj "/C=IT/ST=MA/O=Valez./CN={{ inventory_hostname }}" -out {{ cert_dir }}/{{ inventory_hostname }}.csr
     
-        
+    - name: Generate the certificate using the networking.domain_name csr and key along with the CA Root key
+      command: openssl x509 -req -in {{ cert_dir }}/{{ inventory_hostname }}.csr -CA {{ cert_dir }}/rootCA.crt -CAkey {{ cert_dir }}/rootCA.key -CAcreateserial -out {{ cert_dir }}/{{ inventory_hostname }}.crt -days 500 -sha256
+
+    - name: Copying required certificate and key
+      command: cp {{ cert_dir }}/{{ item }} /opt/registry/certs/
+      loop:
+        - "{{ inventory_hostname }}.crt"
+        - "{{ inventory_hostname }}.key"
+
+    - name: Trusting certificate
+      command: cp {{ cert_dir }}/rootCA.crt /etc/pki/ca-trust/source/anchors/
+
+    - command: update-ca-trust
+      
           
       
