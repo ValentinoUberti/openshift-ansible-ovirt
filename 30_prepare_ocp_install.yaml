@@ -6,10 +6,6 @@
      - vars/downloads.yaml
   tasks:
     
-    - name: Getting ssh public key
-      set_fact:
-        sshKey: "{{ lookup('file','~/.ssh/id_rsa.pub') }}"
-
     - name: Removing config directory
       file:
         path: "{{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}"
@@ -20,11 +16,19 @@
         path: "{{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}"
         state: directory
 
+    - name: Getting ssh public key
+      slurp:
+        src: ~/.ssh/id_rsa.pub
+      register: key
+
+    - set_fact:
+        sshKey: "{{ key['content'] | b64decode }}"
+
     - name: Firing up install-config.yaml
       template:
         src: templates/install-config.j2
         dest: "{{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}/install-config.yaml"
-
+      
     - name: Creating ignition manifest
       command: openshift-install create manifests --dir {{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}
 

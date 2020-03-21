@@ -30,6 +30,14 @@
     - file:
         path: "{{ cert_dir }}"
         state: directory
+    
+    - file:
+        path: "/opt/registry/{{ item }}"
+        state: directory
+      loop:
+        - certs
+        - auth
+        - data
    
     - name: Create Root CA Key
       command: openssl genrsa -out {{ cert_dir }}/rootCA.key 4096

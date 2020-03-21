@@ -1,7 +1,2 @@
-private_key_password: "ajejebrazorf"
 dnsname: "{{ inventory_hostname }}"
 cert_dir: "{{ workspace_directory.base_path }}/certificates/{{ dnsname }}"
-crtpath: "{{ cert_dir }}/{{ dnsname }}.crt"
-pempath: "{{ cert_dir }}/{{ dnsname }}.pem"
-csrpath: "{{ cert_dir }}/{{ dnsname }}.csr"
-pfxpath: "{{ cert_dir }}/{{ dnsname }}.pfx"
