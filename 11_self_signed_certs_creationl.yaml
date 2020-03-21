@@ -20,7 +20,6 @@
 
     - name: Installing pyopenssl
       command: pip install pyopenssl
-
     
     - name: Refreshing certificates dir
       file:
@@ -47,7 +46,6 @@
    
     - name: Create the key for {{ inventory_hostname }}
       command: openssl genrsa -out {{ cert_dir }}/{{ inventory_hostname }}.key 2048
-      
 
     - name: Create CSR for {{ inventory_hostname }}
       command: openssl req -new -sha256 -key {{ cert_dir }}/{{ inventory_hostname }}.key -subj "/C=IT/ST=MA/O=Valez./CN={{ inventory_hostname }}" -out {{ cert_dir }}/{{ inventory_hostname }}.csr
@@ -56,15 +54,16 @@
       command: openssl x509 -req -in {{ cert_dir }}/{{ inventory_hostname }}.csr -CA {{ cert_dir }}/rootCA.crt -CAkey {{ cert_dir }}/rootCA.key -CAcreateserial -out {{ cert_dir }}/{{ inventory_hostname }}.crt -days 500 -sha256
 
     - name: Copying required certificate and key
-      command: cp {{ cert_dir }}/{{ item }} /opt/registry/certs/
+      copy: 
+        src: "{{ cert_dir }}/{{ item }}"
+        dest: /opt/registry/certs/
       loop:
         - "{{ inventory_hostname }}.crt"
         - "{{ inventory_hostname }}.key"
 
     - name: Trusting certificate
-      command: cp {{ cert_dir }}/rootCA.crt /etc/pki/ca-trust/source/anchors/
+      copy: 
+        src: "{{ cert_dir }}/rootCA.crt"
+        dest: /etc/pki/ca-trust/source/anchors/
 
     - command: update-ca-trust
-      
-          
-      
