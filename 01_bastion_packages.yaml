@@ -28,6 +28,7 @@
           - cronie
           - cronie-anacron
           - tar
+          - bind-utils
         state: present
       when: ansible_distribution == "CentOS"
       

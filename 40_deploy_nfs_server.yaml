@@ -1,6 +1,5 @@
 - name: Create nfs share and registry pv
   hosts: bastion
-  gather_facts: no
   become: True
   vars_files: 
     - vars/vars.yaml
@@ -10,6 +9,11 @@
         src: templates/nfs_exports.j2
         dest: /etc/exports.d/registry.exports
 
+    - package:
+        name: policycoreutils-python-utils
+        state: present
+      when: ansible_distribution == "CentOS" 
+        
     - name: Activating selinux boolean (virt_use_nfs)
       seboolean:
         name: virt_use_nfs
@@ -31,4 +35,8 @@
       template:
         src: templates/pv_registry.j2
         dest: "{{ workspace_directory.base_path }}/pv_registry.yaml"
-      
+
+    - command: /usr/local/bin/oc create -f {{ workspace_directory.base_path }}/pv_registry.yaml --config={{ workspace_directory.base_path }}/config/auth/kubeconfig
+
+    
+               
