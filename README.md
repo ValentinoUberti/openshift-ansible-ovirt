@@ -34,10 +34,10 @@ run: ansible-playbook main.yaml -e 'skip_download=yes' from avoiding download of
 
 Pxe boot all the cluster machines and select 1 bootstrap, 3 master and all the remaing workers
 
-Depends on your connection speed:
+Depending on the connection speed:
   - take a coffe
   - watch a movie
-  
+
 
 
 
