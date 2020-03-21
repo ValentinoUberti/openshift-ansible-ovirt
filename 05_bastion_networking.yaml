@@ -75,6 +75,6 @@
     - name: Reload Bastion firewalld service
       service:
         name: firewalld
-        state: reloaded 
+        state: restarted 
         
     

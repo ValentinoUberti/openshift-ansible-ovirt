@@ -74,12 +74,18 @@
         job: "{{ workspace_directory.base_path }}/csr.sh"
         state: present
     
+    - debug:
+        msg:  Pxe boot the bootstrap and masters vm selecting the appropiate boot menu
+
     - name: Waiting for bootstrap to complete
       command: openshift-install wait-for bootstrap-complete --dir {{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}
       retries: 10
       delay: 5
       register: result
       until: result.rc == 0
+
+    - debug:
+        msg: "Pxe boot the workers vms selecting the appropiate boot menu" 
 
     - name: Waiting for install to complete
       command: openshift-install wait-for install-complete --dir {{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}

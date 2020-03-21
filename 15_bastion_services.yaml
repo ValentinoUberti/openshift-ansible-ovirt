@@ -73,11 +73,7 @@
             src: templates/pxeboot_default.j2
             dest: /var/lib/tftpboot/pxelinux.cfg/default
     
-        - name: Reload dnsmasq service
-          service:
-            name: dnsmasq
-            state: restarted
-            enabled: true
+        
 
         - name: Configure {{ networking.public_interface_name }} to use {{ networking.internal_network_ip }} as DNS server
           command: nmcli con mod {{ networking.public_interface_name }} ipv4.dns "{{ networking.internal_network_ip }}" 
@@ -85,12 +81,9 @@
         - name: Refreshing {{ networking.public_interface_name }}
           shell: nmcli con down "{{ networking.public_interface_name }}"; nmcli con up "{{ networking.public_interface_name }}"
                     
-        - name: Reload http service
-          service:
-            name: nginx
-            state: restarted
-            enabled: true
-        
+        - name: Rebooting bastion
+          reboot:
+          
       become: True
 
     

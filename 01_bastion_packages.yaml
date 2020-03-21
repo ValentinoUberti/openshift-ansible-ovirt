@@ -4,7 +4,7 @@
   become: True
   tasks:
      
-    - name: Installing required packages for Bastion Vm
+    - name: Installing required packages for Bastion Vm (Fedora)
       package:
         name:
           - syslinux
@@ -15,4 +15,20 @@
           - cronie-anacron
           - python-netaddr
         state: present
+      when: ansible_distribution == "Fedora"
+
+    - name: Installing required packages for Bastion Vm (Centos 8)
+      package:
+        name:
+          - python36
+          - syslinux
+          - dnsmasq
+          - nginx
+          - nfs-utils
+          - cronie
+          - cronie-anacron
+          - tar
+        state: present
+      when: ansible_distribution == "CentOS"
+      
 

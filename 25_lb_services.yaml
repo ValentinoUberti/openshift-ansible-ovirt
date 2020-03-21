@@ -84,7 +84,7 @@
          - name: Reload firewalld service
            service:
              name: firewalld
-             state: reloaded 
+             state: restarted 
                    
          - name: Enabling selinux boolean for haproxy
            seboolean:

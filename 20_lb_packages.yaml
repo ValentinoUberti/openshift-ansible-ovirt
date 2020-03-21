@@ -8,4 +8,12 @@
       package:
         name:
           - haproxy
-        state: present 
+        state: present
+
+    - name: Installing semanage (Centos 8 minimal)
+      package:
+        name:
+          - policycoreutils-python-utils
+        state: present
+      when: ansible_distribution == "CentOS" 
+    

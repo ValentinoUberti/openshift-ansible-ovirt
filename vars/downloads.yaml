@@ -7,7 +7,7 @@ downloads:
   utils:
     base_url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/
     ocp_oc_cli: openshift-client-linux.tar.gz
-    ocp_installer: openshift-install-linux-4.3.3.tar.gz
+    ocp_installer: openshift-install-linux-4.3.5.tar.gz
   boot:
     base_url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/latest/latest/ 
     initramfs: rhcos-4.3.0-x86_64-installer-initramfs.img
@@ -16,7 +16,7 @@ downloads:
 disconnected:
   product_repo: 'openshift-release-dev'
   release_name: 'ocp-release'
-  ocp_release: '4.3.3-x86_64'
+  ocp_release: '4.3.0-x86_64'
   local_repository: 'ocp4/openshift4'
   local_secret_json: '/tmp/disconnected.json'
   branch: 'ocp-v4.0-art-dev'
