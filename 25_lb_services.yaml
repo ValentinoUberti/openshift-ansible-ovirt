@@ -37,7 +37,7 @@
            command: > 
               nmcli con mod {{ networking.internal_interface_name }} 
               ipv4.address "{{ lb.lb_internal_network_ip }}/{{ internal_ip_and_mask | ipaddr('prefix') }}"
-              connection.zone internal
+              connection.zone internal ipv4.method manual
          
          - name: Refreshing {{ networking.internal_interface_name }}
            shell:  nmcli con down "{{ networking.internal_interface_name }}"; nmcli con up "{{ networking.internal_interface_name }}"
