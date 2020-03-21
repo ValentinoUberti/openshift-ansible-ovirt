@@ -2,13 +2,13 @@
 
 Lab setup:
 
-![alt text](https://raw.githubusercontent.com/ValentinoUberti/haproxy-dnsmasq-configurator-for-openshift-upi/master/files/OvirtLabV2.png)
+![alt text](https://raw.githubusercontent.com/ValentinoUberti/openshift-ansible-ovirt/master/files/OvirtLabV2.png)
 
 # THIS IS A WORKING PROJECT! #
 
 You need 2 VMs (bastion and loadbalancer) with two network interfaces: one for internet access and one for internal comunications.
 
-I used Fedora 31
+Tested on Fedora 31 and Centos 8 minimal
 
 For openshift cluster create at least 6 vms (1 bootstrap, 3 master and at least 2 workers)
 
@@ -34,7 +34,10 @@ run: ansible-playbook main.yaml -e 'skip_download=yes' from avoiding download of
 
 Pxe boot all the cluster machines and select 1 bootstrap, 3 master and all the remaing workers
 
-Watch a movie
+Depends on your connection speed:
+  - take a coffe
+  - watch a movie
+  
 
 
 
