@@ -28,9 +28,9 @@ Create ssh keys on bastion and exchange the keys with LoadBalancer VM
 
 Ensure current user is in the wheel group without need a password for privilege escalation
 
-run: ansible-playbook main.yaml for setup all the machines from scratch
+run: ansible-playbook connected_install.yaml for setup all the machines from scratch
 
-run: ansible-playbook main.yaml -e 'skip_download=yes' from avoiding download of initramfs, kernel and Red Hat CoreOS image
+run: ansible-playbook connected_install.yaml -e 'skip_download=yes' from avoiding download of initramfs, kernel and Red Hat CoreOS image
 
 Pxe boot all the cluster machines and select 1 bootstrap, 3 master and all the remaing workers
 
