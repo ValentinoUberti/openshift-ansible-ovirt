@@ -22,9 +22,7 @@ Set the pullSecret in vars/vars.yaml
 
 Set the vms interfaces name  in vars/vars.yaml
 
-Download and install Fedora31 Server on both Bastion and LoadBalancer VM
-
-Create ssh keys on bastion and exchange the keys with LoadBalancer VM
+Download and install Fedora31 Server or CentOS 8 minimal on both Bastion and LoadBalancer VM
 
 Ensure current user is in the wheel group without need a password for privilege escalation
 
@@ -32,7 +30,9 @@ run: ansible-playbook connected_install.yaml for setup all the machines from scr
 
 run: ansible-playbook connected_install.yaml -e 'skip_download=yes' from avoiding download of initramfs, kernel and Red Hat CoreOS image
 
-Pxe boot all the cluster machines and select 1 bootstrap, 3 master and all the remaing workers
+Masters node are set unschedulable.  
+
+Pxe boot all the cluster machines and select 1 bootstrap, 3 masters and at least 2 workers
 
 Depending on the connection speed:
   - take a coffe
