@@ -59,8 +59,11 @@
                ipv4 nat POSTROUTING 0 -o {{ networking.public_interface_name }} -j MASQUERADE
 
     - name: Enabling masquerading on internal interface
-      command: >
-               firewall-cmd --add-masquerade --permanent --zone internal
+      firewalld:
+        masquerade: yes
+        state: enabled
+        permanent: yes
+        zone: internal
 
     - name: Setting up port forwarding from {{ networking.internal_interface_name }} to {{ networking.public_interface_name }}
       command: >
