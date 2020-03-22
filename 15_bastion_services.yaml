@@ -8,12 +8,14 @@
   vars:
     nodes: "{{ cluster['masters'] + cluster['workers']  +   cluster['bootstrap'] }}"
     number_of_nodes: "{{ nodes | length }}"
+    master_nodes: "{{ cluster['masters'] }}"
+    number_of_masters: "{{ master_nodes | length }}"
     nodes_calculated_data: []
     ip_template:
-      primary_ip: "{{  networking.internal_network[:-1] + item }}"
+      primary_ip: "{{ lb.lb_internal_network_ip | ipmath(item | int) }}"
       mac_address: "{{ nodes[ (number_of_nodes | int ) - (item | int) ].mac }}"
-      reverse_dns: "{{ ( networking.internal_network[:-1] + item ) | ipaddr('revdns')  }}"
-          
+      reverse_dns: "{{ lb.lb_internal_network_ip | ipmath(item | int) | ipaddr('revdns')  }}"
+      
   tasks:
     
     - name: Calculating number of node (Bastion)
@@ -22,7 +24,7 @@
     - name: Setting calculated data (Bastion)
       set_fact:
         nodes_calculated_data: "{{ nodes_calculated_data + [ip_template] }}"
-      with_sequence: "start=3 count={{ number_of_nodes }}"
+      with_sequence: "start=1 count={{ number_of_nodes }}"
     
     - block:
          
@@ -73,8 +75,6 @@
             src: templates/pxeboot_default.j2
             dest: /var/lib/tftpboot/pxelinux.cfg/default
     
-        
-
         - name: Configure {{ networking.public_interface_name }} to use {{ networking.internal_network_ip }} as DNS server
           command: nmcli con mod {{ networking.public_interface_name }} ipv4.dns "{{ networking.internal_network_ip }}" 
 
