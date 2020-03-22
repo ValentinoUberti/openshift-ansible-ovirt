@@ -5,7 +5,7 @@
 
 ## External dns ##
 
-server={{  networking.external_dns }}
+server={{ networking.external_dns }}
 
 ## External dns end ##
 
@@ -87,7 +87,7 @@ dhcp-host={{ node_data.mac_address }},{{  node_data.primary_ip }}
 
 ## SRV records for etcd service. Priority must be 0 and Weight must be 10 ###
 
-{% for i in range(0,3): %}
+{% for i in range(0, ( number_of_masters | int ) ) -%}
 srv-host=_etcd-server-ssl._tcp{{ cluster_domain }},etcd-{{ (i | string)+ cluster_domain }},2380,0,10
 {%endfor%}
 
