@@ -24,6 +24,8 @@ Set the vms interfaces name  in vars/vars.yaml
 
 Download and install Fedora31 Server or CentOS 8 minimal on both Bastion and LoadBalancer VM
 
+Install python3-netaddr package on control node
+
 Ensure current user is in the wheel group without need a password for privilege escalation
 
 run: ansible-playbook connected_install.yaml for setup all the machines from scratch
