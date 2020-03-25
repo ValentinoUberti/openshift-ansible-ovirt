@@ -5,5 +5,5 @@ services:
   - mountd
   - nfs
   - rpc-bind
-  - firewalld
+  
   

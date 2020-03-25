@@ -10,8 +10,9 @@
     - name: Activating firewalld
       service:
         name: firewalld
-        permanent: yes
-        state: enabled
+        state: started
+        enabled: true
+
 
     - name: "Getting {{ inventory_hostname }} ip address on first interface"
       set_fact:

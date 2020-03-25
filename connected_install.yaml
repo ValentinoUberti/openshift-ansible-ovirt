@@ -1,5 +1,6 @@
 ---
 - import_playbook: 01_bastion_packages.yaml
+- import_playbook: 03_bastion_networking_pre_check.yaml
 - import_playbook: 05_bastion_networking.yaml
 - import_playbook: 10_bastion_workspace.yaml
 - import_playbook: 15_bastion_services.yaml
