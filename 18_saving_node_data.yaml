@@ -1,5 +1,5 @@
 - name: Json node list
-  hosts: bastion
+  hosts: localhost
   gather_facts: no
   vars_files: 
     - vars/vars.yaml
@@ -107,7 +107,7 @@
       loop: "{{ nodes_calculated_data | list }}"
 
     - set_fact:
-        my_dict: '{"domain_data": "{{ cluster_domain}}","dns_data":{{ completed_list | to_nice_json }} }'
+        my_dict: '{"dns_server":"{{ networking.internal_network_ip }}","domain_data": "{{ cluster_domain }}","dns_data":{{ completed_list | to_nice_json }} }'
     - debug:
         var: my_dict
     
@@ -115,3 +115,4 @@
       copy:
         content: "{{ my_dict | from_json | to_nice_json }}"
         dest: /tmp/dns-test.json
+      delegate_to: localhost
