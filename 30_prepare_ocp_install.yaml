@@ -10,6 +10,7 @@
       file:
         path: "{{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}"
         state: absent
+      become: true
 
     - name: Creating config directory
       file:

@@ -6,6 +6,13 @@
     - vars/downloads.yaml
     - vars/vars.yaml
   tasks:
+
+    - name: Erasing dnsmasq lease
+      file:
+        path: /var/lib/dnsmasq/dnsmasq.leases
+        state: absent
+      become: true
+
     - name: Creating workspace
       file:
         state: directory

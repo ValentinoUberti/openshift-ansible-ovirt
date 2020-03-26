@@ -10,7 +10,7 @@
     number_of_nodes: "{{ nodes | length }}"
     nodes_calculated_data: []
     ip_template:
-      primary_ip: "{{  networking.internal_network[:-1] + item }}"
+      primary_ip: "{{ lb.lb_internal_network_ip | ipmath(item | int) }}"
       mac_address: "{{ nodes[ (number_of_nodes | int ) - (item | int) ].mac }}"
     internal_ip_and_mask: "{{ networking.internal_network_ip }}/{{ networking.internal_network_netmask }}"
           
@@ -21,7 +21,7 @@
         number_of_nodes: "{{ nodes | length }}"
     - set_fact:
         nodes_calculated_data: "{{ nodes_calculated_data + [ip_template] }}"
-      with_sequence: "start=3 count={{ number_of_nodes }}"
+      with_sequence: "start=1 count={{ number_of_nodes }}"
     
     - block:
 
