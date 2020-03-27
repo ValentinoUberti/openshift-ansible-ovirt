@@ -71,7 +71,7 @@
         - name: Download Red Hat CoreOS for bare metal
           get_url:
             url:  "{{ downloads.boot.base_url + downloads.boot.coreos }}"
-            dest: "{{ downloads.ngnix_document_root }}/{{ downloads.nginix_workspace_dir }}"
+            dest: "{{ downloads.ngnix_document_root }}/{{ downloads.nginix_workspace_dir }}/{{ downloads.boot.coreos }}"
       when: not (skip_download | bool)
       become: true
         

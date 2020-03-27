@@ -1,5 +1,5 @@
 - name: Json node list
-  hosts: localhost
+  hosts: lb
   gather_facts: no
   vars_files: 
     - vars/vars.yaml
@@ -115,4 +115,4 @@
       copy:
         content: "{{ my_dict | from_json | to_nice_json }}"
         dest: /tmp/dns-test.json
-      delegate_to: localhost
+      
