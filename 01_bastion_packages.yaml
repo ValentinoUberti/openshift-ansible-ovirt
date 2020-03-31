@@ -21,6 +21,7 @@
     - name: Installing required packages for Bastion Vm (Centos 8)
       package:
         name:
+          - epel-release
           - python36
           - syslinux
           - dnsmasq

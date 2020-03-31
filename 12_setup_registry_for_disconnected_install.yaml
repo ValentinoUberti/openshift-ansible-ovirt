@@ -3,10 +3,6 @@
   hosts: bastion
   gather_facts: false 
   become: true
-  vars_files:
-     - vars/vars.yaml
-     - vars/downloads.yaml
-     - vars/self_signed_certs.yaml
   vars:
     - username: registry
     - password: sadlkfjsdafj23498jd

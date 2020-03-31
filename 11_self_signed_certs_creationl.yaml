@@ -2,10 +2,7 @@
 - name: Creating rootCa and {{ inventory_hostname }} certs
   hosts: bastion
   become: true
-  vars_files:
-     - vars/vars.yaml
-     - vars/downloads.yaml
-     - vars/self_signed_certs.yaml
+  
    
   tasks:
     - name: Ensure required packages are installed

@@ -2,9 +2,6 @@
 - name: Creating a workspace on Bastion
   hosts: bastion 
   gather_facts: no
-  vars_files:
-    - vars/downloads.yaml
-    - vars/vars.yaml
   tasks:
 
     - name: Erasing dnsmasq lease
@@ -40,13 +37,23 @@
         src: "{{ item }}"
         dest: /usr/local/bin
         remote_src: yes
+        validate_certs: no
       become: True
       loop:
         - "{{ downloads.utils.base_url + downloads.utils.ocp_oc_cli }}"
-        - "{{ downloads.utils.base_url + downloads.utils.ocp_installer }}"
       when: not (skip_download | bool)
-      
 
+    - name: Downloading openshift-installer
+      get_url:
+        url: "{{ downloads.utils.base_url + downloads.utils.ocp_installer }}"
+        dest: /tmp/installer.tar.gz
+
+    - name: Unpacking installer
+      unarchive:
+        src: /tmp/installer.tar.gz
+        dest: /usr/local/bin
+        remote_src: yes
+      become: true
 
     - name: Checking for openshift-install tool
       command: openshift-install
@@ -59,6 +66,7 @@
       failed_when: output.rc !=0
 
     - block:
+       
         - name: Download initramfs and kernel 
           get_url:
             url: "{{ downloads.boot.base_url + item }}"
@@ -66,12 +74,14 @@
           loop:
             - "{{ downloads.boot.initramfs }}"
             - "{{ downloads.boot.kernel }}"
+          retries: 10
       
 
         - name: Download Red Hat CoreOS for bare metal
           get_url:
             url:  "{{ downloads.boot.base_url + downloads.boot.coreos }}"
             dest: "{{ downloads.ngnix_document_root }}/{{ downloads.nginix_workspace_dir }}/{{ downloads.boot.coreos }}"
+          retries: 10
       when: not (skip_download | bool)
       become: true
         

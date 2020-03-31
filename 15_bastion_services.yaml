@@ -1,10 +1,6 @@
 - name: Bastion services configuration
   hosts: bastion
-  gather_facts: no
-  vars_files: 
-    - vars/vars.yaml
-    - vars/downloads.yaml
-    - vars/pxe_menu.yaml
+  
   vars:
     nodes: "{{ cluster['masters'] + cluster['workers']  +   cluster['bootstrap'] }}"
     number_of_nodes: "{{ nodes | length }}"
@@ -75,14 +71,23 @@
             src: templates/pxeboot_default.j2
             dest: /var/lib/tftpboot/pxelinux.cfg/default
     
-        - name: Configure {{ networking.public_interface_name }} to use {{ networking.internal_network_ip }} as DNS server
-          command: nmcli con mod {{ networking.public_interface_name }} ipv4.dns "{{ networking.internal_network_ip }}" 
+        - name: Configure {{ ansible_local.external_connection.conname }} to use {{ networking.internal_network_ip }} as DNS server
+          command: nmcli con mod '{{ ansible_local.external_connection.conname }}' ipv4.dns "{{ networking.internal_network_ip }}" 
 
-        - name: Refreshing {{ networking.public_interface_name }}
-          shell: nmcli con down "{{ networking.public_interface_name }}"; nmcli con up "{{ networking.public_interface_name }}"
-                    
+        - name: Refreshing {{ ansible_local.external_connection.conname }}
+          shell: nmcli con down "{{ ansible_local.external_connection.conname }}"; nmcli con up "{{ ansible_local.external_connection.conname }}"
+
+        - name: Enabling services
+          service:
+            name: "{{ item }}"
+            enabled: true
+          loop: "{{ systemd_services }}"
+            
         - name: Rebooting bastion
           reboot:
+
+        
+        
           
       become: True
 

@@ -1,9 +1,7 @@
 ---
 - name: Install config
   hosts: bastion 
-  vars_files:
-     - vars/vars.yaml
-     - vars/downloads.yaml
+ 
   tasks:
     
     - name: Removing config directory
@@ -74,6 +72,7 @@
         minute: "1"
         job: "{{ workspace_directory.base_path }}/csr.sh >> /tmp/aJob.log 2>&1"
         state: present
+      become: true
     
    
     - debug:

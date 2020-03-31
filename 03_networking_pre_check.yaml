@@ -2,10 +2,13 @@
 - name: Networking playbook 
   hosts: bastion,lb
   become: True
-  vars_files:
-    - vars/vars.yaml
-    - vars/services.yaml
   tasks:
+
+    - name: Checking interfaces
+      fail:
+        msg: The host {{ inventory_hostname }} must have two interfaces
+      when: ansible_interfaces | length != 3
+
 
     - name: Activating firewalld
       service:

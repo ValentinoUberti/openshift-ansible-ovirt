@@ -1,0 +1,15 @@
+firewall_ports:
+  - "69/udp"
+  - "69/tcp"
+  - "68/tcp"
+  - "68/udp"
+  - "4011/tcp"
+  - "4011/udp"
+
+firewall_services:
+  - http
+  - dns
+  - dhcp
+  - mountd
+  - nfs
+  - rpc-bind

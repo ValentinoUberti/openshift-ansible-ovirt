@@ -1,10 +1,7 @@
 ---
 - name: Haproxy  configuration
   hosts: lb 
-  vars_files: 
-    - vars/vars.yaml
-    - vars/downloads.yaml
-    - vars/lb_firewall.yaml
+ 
   vars:
     nodes: "{{ cluster['masters'] + cluster['workers']  + cluster['bootstrap'] }}"
     number_of_nodes: "{{ nodes | length }}"
@@ -27,27 +24,27 @@
 
          - name: Checking internal network interfaces
            fail: 
-            msg: "{{ networking.internal_interface_name }} not found in {{ ansible_facts.interfaces }}"
-           when: networking.internal_interface_name not in ansible_facts.interfaces
+            msg: "{{ ansible_local.internal_connection.ifname }} not found in {{ ansible_facts.interfaces }}"
+           when: ansible_local.internal_connection.ifname not in ansible_facts.interfaces
 
 
          #https://access.redhat.com/discussions/1455033
 
          - name: Setting static ip configuration
            command: > 
-              nmcli con mod {{ networking.internal_interface_name }} 
+              nmcli con mod '{{ ansible_local.internal_connection.conname }}'
               ipv4.address "{{ lb.lb_internal_network_ip }}/{{ internal_ip_and_mask | ipaddr('prefix') }}"
               connection.zone internal ipv4.method manual autoconnect yes ipv4.dns {{ networking.internal_network_ip }}
          
-         - name: Refreshing {{ networking.internal_interface_name }}
-           shell:  nmcli con down "{{ networking.internal_interface_name }}"; nmcli con up "{{ networking.internal_interface_name }}"
+         - name: Refreshing {{ ansible_local.internal_connection.conname }}
+           shell:  nmcli con down "{{ ansible_local.internal_connection.conname }}"; nmcli con up "{{ ansible_local.internal_connection.conname }}"
        
 
 
-         - name: Adding interface {{ networking.internal_interface_name }} to firewall internal zone  
+         - name: Adding interface {{ ansible_local.internal_connection.ifname }} to firewall internal zone  
            firewalld:
              zone: internal
-             interface: "{{ networking.internal_interface_name }}"
+             interface: "{{ ansible_local.internal_connection.ifname }}"
              permanent: yes
              state: enabled
 
@@ -57,14 +54,14 @@
              state: enabled
              permanent: yes
              service: "{{ item }}"
-           loop: "{{ services }}"
+           loop: "{{ systemd_services }}"
 
          - name: Allow service for public zone
            firewalld:
              state: enabled
              permanent: yes
              service: "{{ item }}"
-           loop: "{{ services }}"
+           loop: "{{ systemd_services }}"
 
          - name: Allow ports for internal zone
            firewalld:

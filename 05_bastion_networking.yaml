@@ -2,32 +2,29 @@
 - name: Bastion networking playbook 
   hosts: bastion 
   become: True
-  vars_files:
-    - vars/vars.yaml
-    - vars/services.yaml
   vars:
     internal_ip_and_mask: "{{ networking.internal_network_ip }}/{{ networking.internal_network_netmask }}" 
   
   tasks:
     - name: Checking Bastion internal network interfaces
       fail: 
-        msg: "{{ networking.internal_interface_name }} not found in {{ ansible_facts.interfaces }}"
-      when: networking.internal_interface_name not in ansible_facts.interfaces
+        msg: "{{ ansible_local.internal_connection.ifname }} not found in {{ ansible_facts.interfaces }}"
+      when: ansible_local.internal_connection.ifname not in ansible_facts.interfaces
     
-    - name: Adding interface {{ networking.internal_interface_name }} to internal zone
-      command: nmcli con mod {{ networking.internal_interface_name }} connection.zone internal     
+    - name: Adding interface {{ ansible_local.internal_connection.conname }} to internal zone
+      command: nmcli con mod '{{ ansible_local.internal_connection.conname }}' connection.zone internal     
 
     - name: Setting Bastion static ip configuration
       command: > 
-                nmcli con mod {{ networking.internal_interface_name }} 
+                nmcli con mod '{{ ansible_local.internal_connection.conname }}' 
                 ipv4.address "{{ networking.internal_network_ip }}/{{ internal_ip_and_mask | ipaddr('prefix') }}"
                 autoconnect yes ipv4.method manual
 
     
-    - name: Adding Bastion interface {{ networking.internal_interface_name }} to firewall internal zone  
+    - name: Adding Bastion interface {{ ansible_local.internal_connection.conname }} to firewall internal zone  
       firewalld:
         zone: internal
-        interface: "{{ networking.internal_interface_name }}"
+        interface: "{{ ansible_local.internal_connection.conname }}"
         permanent: yes
         state: enabled
 
@@ -37,7 +34,7 @@
         state: enabled
         permanent: yes
         service: "{{ item }}"
-      loop: "{{ services }}"
+      loop: "{{ firewall_services }}"
 
     - name: Allow tftp and pxe ports
       firewalld:
@@ -45,18 +42,12 @@
         state: enabled
         permanent: yes
         port: "{{ item }}"
-      loop:
-        - "69/udp"
-        - "69/tcp"
-        - "68/tcp"
-        - "68/udp"
-        - "4011/tcp"
-        - "4011/udp"
-
+      loop: "{{ firewall_ports }}"
+        
     - name: Enabling masquerading
       command: >
                firewall-cmd --direct --permanent --add-rule 
-               ipv4 nat POSTROUTING 0 -o {{ networking.public_interface_name }} -j MASQUERADE
+               ipv4 nat POSTROUTING 0 -o {{ ansible_local.external_connection.ifname }} -j MASQUERADE
 
     - name: Enabling masquerading on internal interface
       firewalld:
@@ -65,15 +56,15 @@
         permanent: yes
         zone: internal
 
-    - name: Setting up port forwarding from {{ networking.internal_interface_name }} to {{ networking.public_interface_name }}
+    - name: Setting up port forwarding from {{ ansible_local.internal_connection.ifname }} to {{ ansible_local.external_connection.ifname }}
       command: >
                firewall-cmd --direct --permanent --add-rule ipv4 filter 
-               FORWARD 0 -i {{ networking.internal_interface_name }} -o {{ networking.public_interface_name }}  -j ACCEPT
+               FORWARD 0 -i {{ ansible_local.internal_connection.ifname }} -o {{ ansible_local.external_connection.ifname }}  -j ACCEPT
 
-    - name: Setting up port forwarding from {{ networking.public_interface_name }} to {{ networking.internal_interface_name }}
+    - name: Setting up port forwarding from {{ ansible_local.external_connection.ifname }} to {{ ansible_local.internal_connection.ifname }}
       command: >
                firewall-cmd --direct --permanent --add-rule ipv4 filter 
-               FORWARD 0 -i {{ networking.public_interface_name }} -o {{ networking.internal_interface_name }} -m state --state RELATED,ESTABLISHED -j ACCEPT
+               FORWARD 0 -i {{ ansible_local.external_connection.ifname }} -o {{ ansible_local.internal_connection.ifname }} -m state --state RELATED,ESTABLISHED -j ACCEPT
    
     - name: Reload Bastion firewalld service
       service:

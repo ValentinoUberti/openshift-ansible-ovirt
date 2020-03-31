@@ -1,0 +1,3 @@
+systemd_services:
+  - dnsmasq
+  - nginx

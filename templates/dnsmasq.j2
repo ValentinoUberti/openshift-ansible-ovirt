@@ -96,7 +96,7 @@ srv-host=_etcd-server-ssl._tcp{{ cluster_domain }},etcd-{{ (i | string)+ cluster
 ## PXE ##
 
 enable-tftp
-tftp-root=/var/lib/tftpboot,{{  networking.internal_interface_name }}
+tftp-root=/var/lib/tftpboot,{{ ansible_local.internal_connection.ifname }}
 dhcp-boot=pxelinux.0
 
 ## PXE end ##
@@ -105,12 +105,12 @@ dhcp-boot=pxelinux.0
 
 dhcp-option=101,"{{ dhcp.timezone }}"
 domain={{ networking.domain_name }}
-no-dhcp-interface={{ networking.public_interface_name }}
-interface={{ networking.internal_interface_name }}
+no-dhcp-interface={{ ansible_local.external_connection.ifname }}
+interface={{ ansible_local.internal_connection.ifname }}
 dhcp-option=option:netmask,{{ networking.internal_network_netmask }}
 dhcp-option=option:dns-server,{{ networking.internal_network_ip }}
 dhcp-option=option:ntp-server,{{ dhcp.ntp }}
-dhcp-range={{ networking.internal_interface_name }},{{ dhcp.start }},{{ dhcp.end }},12h
+dhcp-range={{ansible_local.internal_connection.ifname }},{{ dhcp.start }},{{ dhcp.end }},12h
 
 ## DHCP end ##
 
