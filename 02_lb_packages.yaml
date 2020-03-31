@@ -8,6 +8,7 @@
       package:
         name:
           - haproxy
+          - bind-utils
         state: present
 
     - name: Installing semanage (Centos 8 minimal)

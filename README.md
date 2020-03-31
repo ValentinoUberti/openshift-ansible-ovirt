@@ -4,7 +4,7 @@ Lab setup:
 
 ![alt text](https://raw.githubusercontent.com/ValentinoUberti/openshift-ansible-ovirt/master/files/OvirtLabV2.png)
 
-# THIS IS A WORKING PROJECT! #
+# Tested with Fedora 31 base os and Centos 8 Minimal #
 
 You need 2 VMs (bastion and loadbalancer) with two network interfaces: one for internet access and one for internal comunications.
 
