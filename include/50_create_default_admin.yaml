@@ -1,12 +1,5 @@
 - name: Create admin with cluster admin privileges
   hosts: bastion
-  vars_files: 
-    - vars/vars.yaml
-  
-  vars:
-     ocp_user: vale
-     ocp_pass: toor
-
   tasks:
     
     - name: Ensuring httpd-tools is present
@@ -62,12 +55,12 @@
     - name: Creating htpasswd identiry and user
       command: /tmp/ocp_user.sh
 
-    - name: Sleeping 30 seconds...
-      command: sleep 30
+    - name: Sleeping 60 seconds...
+      command: sleep 60
 
     - name: Try to login with admin
       command: > 
-               /usr/local/bin/oc login -u {{ ocp_user }} -p {{ ocp_pass}} 
+               /usr/local/bin/oc login -u {{ cluster.ocp_user }} -p {{ cluster.ocp_pass }} 
                https://api.{{ cluster.name }}.{{ networking.domain_name }}:6443 --config {{ workspace_directory.base_path }}/config/auth/kubeconfig
                 
     

@@ -1,10 +1,12 @@
 ---
-- import_playbook: 01_bastion_packages.yaml
-- import_playbook: 02_lb_packages.yaml
-- import_playbook: 03_networking_pre_check.yaml
-- import_playbook: 05_bastion_networking.yaml
-- import_playbook: 10_bastion_workspace.yaml
-- import_playbook: 15_bastion_services.yaml
-- import_playbook: 18_saving_node_data.yaml
-- import_playbook: 25_lb_services.yaml
-- import_playbook: 30_prepare_ocp_install.yaml
+- import_playbook: include/01_bastion_packages.yaml
+- import_playbook: include/02_lb_packages.yaml
+- import_playbook: include/03_networking_pre_check.yaml
+- import_playbook: include/05_bastion_networking.yaml
+- import_playbook: include/10_bastion_workspace.yaml
+- import_playbook: include/15_bastion_services.yaml
+- import_playbook: include/18_saving_node_data.yaml
+- import_playbook: include/25_lb_services.yaml
+- import_playbook: include/30_prepare_ocp_install.yaml
+#- import_playbook: include/40_deploy_nfs_server.yaml
+#- import_playbook: include/50_create_default_admin.yaml
