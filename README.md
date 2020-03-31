@@ -20,7 +20,7 @@ Get an openshit pullSecret on  https://cloud.redhat.com/openshift/install  -> Ru
 
 Set the pullSecret in vars/vars.yaml
 
-Set the vms interfaces name  in vars/vars.yaml
+The interface and connection name are autodetected
 
 Download and install Fedora31 Server or CentOS 8 minimal on both Bastion and LoadBalancer VM
 
