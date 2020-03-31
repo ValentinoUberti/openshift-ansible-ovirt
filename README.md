@@ -18,7 +18,7 @@ Set the mac address of loadbalancer and openshift nodes in vars/vars.yaml
 
 Get an openshit pullSecret on  https://cloud.redhat.com/openshift/install  -> Run on Bare Metal
 
-Set the pullSecret in vars/vars.yaml
+Set the pullSecret in group_vars/vars.yaml
 
 The interface and connection name are autodetected
 
