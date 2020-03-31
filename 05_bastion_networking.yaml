@@ -11,7 +11,7 @@
         msg: "{{ ansible_local.internal_connection.ifname }} not found in {{ ansible_facts.interfaces }}"
       when: ansible_local.internal_connection.ifname not in ansible_facts.interfaces
     
-    - name: Adding interface {{ ansible_local.internal_connection.conname }} to internal zone
+    - name: Adding connection {{ ansible_local.internal_connection.conname }} to internal zone
       command: nmcli con mod '{{ ansible_local.internal_connection.conname }}' connection.zone internal     
 
     - name: Setting Bastion static ip configuration
@@ -21,10 +21,10 @@
                 autoconnect yes ipv4.method manual
 
     
-    - name: Adding Bastion interface {{ ansible_local.internal_connection.conname }} to firewall internal zone  
+    - name: Adding Bastion interface {{ ansible_local.internal_connection.ifname }} to firewall internal zone  
       firewalld:
         zone: internal
-        interface: "{{ ansible_local.internal_connection.conname }}"
+        interface: "{{ ansible_local.internal_connection.ifname }}"
         permanent: yes
         state: enabled
 
@@ -43,7 +43,28 @@
         permanent: yes
         port: "{{ item }}"
       loop: "{{ firewall_ports }}"
-        
+
+
+      # firewall-cmd --add-masquerade --permanent 
+      # firewall-cmd --zone=internal --add-masquerade --permanent
+      # firewall-cmd --reload 
+      # firewall-cmd --direct --add-rule ipv4 nat POSTROUTING 0 -o eth0 -j MASQUERADE
+      # firewall-cmd --direct --add-rule ipv4 filter FORWARD 0 -i eth0 -o eth1 -j ACCEPT
+      # firewall-cmd --direct --add-rule ipv4 filter FORWARD 0 -i eth0 -o eth1 -m state --state RELATED,ESTABLISHED -j ACCEPT
+      # firewall-cmd --reload
+
+    - name: Enabling masquerading on internal interface
+      firewalld:
+        masquerade: yes
+        state: enabled
+        permanent: yes
+       
+
+    - name: Reload Bastion firewalld service
+      service:
+        name: firewalld
+        state: restarted
+
     - name: Enabling masquerading
       command: >
                firewall-cmd --direct --permanent --add-rule 
@@ -56,10 +77,10 @@
         permanent: yes
         zone: internal
 
-    - name: Setting up port forwarding from {{ ansible_local.internal_connection.ifname }} to {{ ansible_local.external_connection.ifname }}
+    - name: Setting up port forwarding from {{ ansible_local.external_connection.ifname }} to {{ ansible_local.internal_connection.ifname }}
       command: >
                firewall-cmd --direct --permanent --add-rule ipv4 filter 
-               FORWARD 0 -i {{ ansible_local.internal_connection.ifname }} -o {{ ansible_local.external_connection.ifname }}  -j ACCEPT
+               FORWARD 0 -i {{ ansible_local.external_connection.ifname }} -o {{ ansible_local.internal_connection.ifname }}  -j ACCEPT
 
     - name: Setting up port forwarding from {{ ansible_local.external_connection.ifname }} to {{ ansible_local.internal_connection.ifname }}
       command: >
