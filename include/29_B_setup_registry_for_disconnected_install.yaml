@@ -147,8 +147,8 @@
       set_fact:
         client_cert: "{{ output['content'] | b64decode }}"
 
-    - set_fact:
-        disconnected_secret: "{{ lookup('template','../templates/disconnected_registry_auth.j2') }}"
+    #- set_fact:
+    #    disconnected_secret: "{{ lookup('template','../templates/disconnected_registry_auth.j2') }}"
         
     - name: Firing up install-config.yaml with imageContentSources and additionalTrustBundle
       template:
