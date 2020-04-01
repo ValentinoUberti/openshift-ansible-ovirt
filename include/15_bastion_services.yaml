@@ -63,12 +63,12 @@
 
         - name: Firing dnsmasq template
           template:
-            src: templates/dnsmasq.j2
+            src: ../templates/dnsmasq.j2
             dest: /etc/dnsmasq.conf
 
         - name: Firing pxe boot template
           template:
-            src: templates/pxeboot_default.j2
+            src: ../templates/pxeboot_default.j2
             dest: /var/lib/tftpboot/pxelinux.cfg/default
     
         - name: Configure {{ ansible_local.external_connection.conname }} to use {{ networking.internal_network_ip }} as DNS server

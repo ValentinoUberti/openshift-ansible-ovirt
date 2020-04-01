@@ -1,0 +1,166 @@
+---
+- name: Preparing for disconnected OCP installation
+  hosts: bastion
+  
+  become: true
+  vars:
+    - username: registry
+    - password: sadlkfjsdafj23498jd
+    
+  tasks:
+    - name: Creating required folder for {{ inventory_hostname }} registry
+      file:
+        state: directory
+        path: "{{ item }}"
+      loop:
+        - /opt/registry/auth
+        - /opt/registry/certs 
+        - /opt/registry/data
+
+    - name: Install python-passlib
+      package:
+        name: 
+          - python3-passlib
+          - podman
+        state: present
+      
+    - name: Generating htpaasswd user and password
+      command: htpasswd -bBc /opt/registry/auth/htpasswd {{ username }} {{ password }}
+
+    #- name: Generating htpaasswd user and password
+    #  htpasswd:
+    #    path: /opt/registry/auth/htpasswd
+    #    name: "{{ username }}"
+    #    password: "{{ password }}"
+    #    crypt_scheme: bcrypt
+
+    - name: Ensuring registry pod is not running
+      command: podman rm -f mirror-registry
+      failed_when: false
+
+    - name: Setup firewall
+      firewalld:
+        port: 5000/tcp
+        permanent: yes
+        state: enabled
+    
+    - firewalld:
+        port: 5000/tcp
+        permanent: yes
+        state: enabled
+        zone: internal
+
+    - service:
+        name: firewalld
+        state: restarted
+
+    - command: podman rm -f mirror
+      failed_when: false
+
+    - name: Staring registry pod
+      template:
+        src: ../templates/podman_registry.j2
+        dest: /tmp/podman.sh
+        mode: a+x
+
+    - command: /tmp/podman.sh
+      
+         
+    - name: Testing login to registry
+      uri:
+        url: https://{{ inventory_hostname }}:5000/v2/_catalog
+        method: GET
+        user: "{{ username }}"
+        password: "{{ password }}"
+        force_basic_auth: yes
+        return_content: yes
+        validate_certs: true
+      
+    - name: Creating base64 user and pass
+      set_fact:
+        userPassBase64: "{{ ''.join((username,':',password)) | b64encode }}"
+
+    - set_fact:
+        pullJsonSecret: "{{ cluster.pullSecret | from_json }}"
+
+    - set_fact:
+        email: "{{ (pullJsonSecret.auths | json_query('*') | list)[0].email }}"
+
+    - set_fact:
+        internal_auth: "{{ lookup('template','../templates/registry_auth.j2') | to_json }}"
+    
+    - name:
+      debug:
+        var:  internal_auth | from_json
+    
+    - set_fact:
+        disconnected_secret: "{{ lookup('template','../templates/merge_pull_secret.j2') }}"
+
+    - set_fact:
+        local_registry: "{{ inventory_hostname }}:5000"
+       
+
+    - name: Saving disconnected secret to {{ inventory_hostname }}
+      copy:
+        content: "{{ disconnected_secret }}"
+        dest: "{{ disconnected.local_secret_json }}"
+
+    - name: Creating shell script for mirroring
+      template:
+        src: ../templates/registry_cloner.j2
+        dest: /tmp/registry_cloner.sh
+        mode: +x
+
+    - name: Mirroring the registry
+      command: /tmp/registry_cloner.sh
+      
+    - name: Getting ssh public key
+      slurp:
+        src: ~/.ssh/id_rsa.pub
+      register: key
+      become: no
+
+    - set_fact:
+        sshKey: "{{ key['content'] | b64decode }}"
+     
+    - name: Removing config directory
+      file:
+        path: "{{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}"
+        state: absent
+
+    - name: Creating config directory
+      file:
+        path: "{{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}"
+        state: directory
+      become: no
+    
+    - name: Getting {{ inventory_hostname }} certificate
+      slurp:
+        src: /opt/registry/certs/{{ inventory_hostname }}.crt
+      register: output
+
+    - name: Saving certificate into var
+      set_fact:
+        client_cert: "{{ output['content'] | b64decode }}"
+        
+    - name: Firing up install-config.yaml with imageContentSources and additionalTrustBundle
+      template:
+        src: ../templates/install-config.j2
+        dest: "{{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}/install-config.yaml"
+      become: no
+        
+    - name: Saving ImageContentSourcePolicy CRD in {{ workspace_directory.base_path }}/set_local_mirror_for_upgrade.yaml
+      template:
+        src: ../templates/set_local_mirror_for_upgrade.j2
+        dest: "{{ workspace_directory.base_path }}/set_local_mirror_for_upgrade.yaml"
+      become: no
+
+  
+
+    #- name: Generating openshift-install
+    #  command: "oc adm -a {{ disconnected.local_secret_json }} release extract --command=openshift-install {{ local_registry }}/{{ disconnected.local_repository }}:{{ disconnected.ocp_release }}"
+    
+
+    
+              
+

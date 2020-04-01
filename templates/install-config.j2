@@ -22,11 +22,17 @@ platform:
 pullSecret: '{% if disconnected_secret is undefined %}{{ cluster.pullSecret }}{% else %}{{ disconnected_secret | to_json }}{% endif %}'
 sshKey: '{{ sshKey }}'
 {% if disconnected_secret is defined %}
+
+additionalTrustBundle: |
+{% filter indent(width=2,indentfirst=True) %}
+{{ client_cert }}
+{% endfilter %}
+
 imageContentSources:
 - mirrors:
   - {{ inventory_hostname }}:5000/{{ disconnected.local_repository }}
   source: quay.io/{{ disconnected.product_repo }}/{{ disconnected.release_name }}
 - mirrors:
-  -  {{ inventory_hostname }}:5000/{{ disconnected.local_repository }}
+  - {{ inventory_hostname }}:5000/{{ disconnected.local_repository }}
   source: quay.io/{{ disconnected.product_repo }}/{{ disconnected.branch }}
 {% endif %}

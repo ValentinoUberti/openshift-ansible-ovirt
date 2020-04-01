@@ -1,0 +1,14 @@
+---
+#- import_playbook: include/01_bastion_packages.yaml
+#- import_playbook: include/02_lb_packages.yaml
+#- import_playbook: include/03_networking_pre_check.yaml
+#- import_playbook: include/05_bastion_networking.yaml
+#- import_playbook: include/10_bastion_workspace.yaml
+#- import_playbook: include/15_bastion_services.yaml
+#- import_playbook: include/18_saving_node_data.yaml
+#- import_playbook: include/25_lb_services.yaml
+- import_playbook: include/28_B_self_signed_certs_creation.yaml
+- import_playbook: include/29_B_setup_registry_for_disconnected_install.yaml
+- import_playbook: include/35_ultimating_install.yaml
+#- import_playbook: include/40_deploy_nfs_server.yaml
+#- import_playbook: include/50_create_default_admin.yaml

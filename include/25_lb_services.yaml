@@ -91,7 +91,7 @@
     
          - name: Firing haproxy template
            template:
-             src: templates/haproxy.j2
+             src: ../templates/haproxy.j2
              dest: /etc/haproxy/haproxy.cfg
 
          - name: Reload haproxy service

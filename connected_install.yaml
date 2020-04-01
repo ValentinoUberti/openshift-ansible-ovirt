@@ -8,5 +8,6 @@
 - import_playbook: include/18_saving_node_data.yaml
 - import_playbook: include/25_lb_services.yaml
 - import_playbook: include/30_prepare_ocp_install.yaml
+- import_playbook: include/35_ultimating_install.yaml
 #- import_playbook: include/40_deploy_nfs_server.yaml
 #- import_playbook: include/50_create_default_admin.yaml

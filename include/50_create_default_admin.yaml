@@ -18,11 +18,11 @@
 
     - name: Creating yaml configuration for htpasswd identity provider
       template:
-        src: templates/htpasswd_provider.j2
+        src: ../templates/htpasswd_provider.j2
         dest: "{{ workspace_directory.base_path }}/htpasswd_provider.yaml"
 
     - template:
-        src: templates/ocp_user_script.j2
+        src: ../templates/ocp_user_script.j2
         dest: /tmp/ocp_user.sh
         mode: +x
         
@@ -62,7 +62,7 @@
       command: > 
                /usr/local/bin/oc login -u {{ cluster.ocp_user }} -p {{ cluster.ocp_pass }} 
                https://api.{{ cluster.name }}.{{ networking.domain_name }}:6443 --config {{ workspace_directory.base_path }}/config/auth/kubeconfig
-                
+      retries: 10   
     
 
                

@@ -1,7 +1,7 @@
 ---
 - name: Preparing for disconnected OCP installation
   hosts: bastion
-  gather_facts: false 
+  
   become: true
   vars:
     - username: registry
@@ -19,7 +19,9 @@
 
     - name: Install python-passlib
       package:
-        name: python-passlib
+        name: 
+          - python3-passlib
+          - podman
         state: present
       
     - name: Generating htpaasswd user and password
@@ -57,7 +59,7 @@
 
     - name: Staring registry pod
       template:
-        src: templates/podman_registry.j2
+        src: ../templates/podman_registry.j2
         dest: /tmp/podman.sh
         mode: a+x
 
@@ -74,9 +76,13 @@
         return_content: yes
         validate_certs: true
       
+
+    - shell: echo -n '{{ username }}:{{ password }}' | base64 -w0
+      register: out
+
     - name: Creating base64 user and pass
       set_fact:
-        userPassBase64: "{{ ''.join((username,':',password)) | b64encode }}"
+        userPassBase64: "{{ out.stdout }}"
 
     - set_fact:
         pullJsonSecret: "{{ cluster.pullSecret | from_json }}"
@@ -85,14 +91,14 @@
         email: "{{ (pullJsonSecret.auths | json_query('*') | list)[0].email }}"
 
     - set_fact:
-        internal_auth: "{{ lookup('template','templates/registry_auth.j2') | to_json }}"
+        internal_auth: "{{ lookup('template','../templates/registry_auth.j2') | to_json }}"
     
     - name:
       debug:
         var:  internal_auth | from_json
     
     - set_fact:
-        disconnected_secret: "{{ lookup('template','merge_pull_secret.j2') }}"
+        disconnected_secret: "{{ lookup('template','../templates/merge_pull_secret.j2') }}"
 
     - set_fact:
         local_registry: "{{ inventory_hostname }}:5000"
@@ -105,7 +111,7 @@
 
     - name: Creating shell script for mirroring
       template:
-        src: templates/registry_cloner.j2
+        src: ../templates/registry_cloner.j2
         dest: /tmp/registry_cloner.sh
         mode: +x
 
@@ -130,49 +136,33 @@
       file:
         path: "{{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}"
         state: directory
+      become: no
     
-    - name: Firing up install-config.yaml with imageContentSources 
-      template:
-        src: templates/install-config.j2
-        dest: "{{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}/install-config.yaml"
+    - name: Getting {{ inventory_hostname }} certificate
+      slurp:
+        src: /opt/registry/certs/{{ inventory_hostname }}.crt
+      register: output
+
+    - name: Saving certificate into var
+      set_fact:
+        client_cert: "{{ output['content'] | b64decode }}"
+
+    - set_fact:
+        disconnected_secret: "{{ lookup('template','../templates/disconnected_registry_auth.j2') }}"
         
+    - name: Firing up install-config.yaml with imageContentSources and additionalTrustBundle
+      template:
+        src: ../templates/install-config.j2
+        dest: "{{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}/install-config.yaml"
+      become: no
         
     - name: Saving ImageContentSourcePolicy CRD in {{ workspace_directory.base_path }}/set_local_mirror_for_upgrade.yaml
       template:
-        src: templates/set_local_mirror_for_upgrade.j2
+        src: ../templates/set_local_mirror_for_upgrade.j2
         dest: "{{ workspace_directory.base_path }}/set_local_mirror_for_upgrade.yaml"
+      become: no
 
-    - name: Creating ignition manifest
-      command: openshift-install create manifests --dir {{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}
-
-    - name: Setting master unchedulable
-      lineinfile:
-        path: "{{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}/manifests/cluster-scheduler-02-config.yml"
-        regexp: '  mastersSchedulable'
-        line: '  mastersSchedulable: False'
-
-    - name: Creating ignition files
-      command: openshift-install create ignition-configs --dir {{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}
-
-    - name: Copying ignition files to webserver
-      command: >
-               cp "{{ workspace_directory.base_path }}/{{ workspace_directory.config_dir }}/{{ item }}"
-               "{{ downloads.ngnix_document_root }}/{{ downloads.nginix_workspace_dir }}"
-      loop: 
-        - bootstrap.ign
-        - master.ign
-        - worker.ign
-      become: True
-
-    - name: Fixing permission
-      file:
-        path: "{{ downloads.ngnix_document_root }}/{{ downloads.nginix_workspace_dir }}/{{ item }}"
-        mode: "u=rw,g=r,o=r"
-      loop: 
-        - bootstrap.ign
-        - master.ign
-        - worker.ign
-      become: True
+  
 
     #- name: Generating openshift-install
     #  command: "oc adm -a {{ disconnected.local_secret_json }} release extract --command=openshift-install {{ local_registry }}/{{ disconnected.local_repository }}:{{ disconnected.ocp_release }}"

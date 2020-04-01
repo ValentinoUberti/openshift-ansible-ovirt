@@ -34,4 +34,4 @@ cluster:
       - mac: "56:6f:9c:ac:00:07"
       - mac: "56:6f:9c:ac:00:08"
       - mac: "56:6f:9c:ac:00:09" 
-  pullSecret: 
+  pullSecret: ''

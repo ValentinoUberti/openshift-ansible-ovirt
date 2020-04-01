@@ -51,7 +51,7 @@
       command: openssl req -x509 -new -nodes -key {{ cert_dir }}/rootCA.key -sha256 -days 1024 -out {{ cert_dir }}/rootCA.crt -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com"
    
     - name: Create the key for {{ inventory_hostname }}
-      command: openssl genrsa -out {{ cert_dir }}/{{ inventory_hostname }}.key 2048
+      command: openssl genrsa -out {{ cert_dir }}/{{ inventory_hostname }}.key 4096
 
     - name: Create CSR for {{ inventory_hostname }}
       command: openssl req -new -sha256 -key {{ cert_dir }}/{{ inventory_hostname }}.key -subj "/C=IT/ST=MA/O=Valez./CN={{ inventory_hostname }}" -out {{ cert_dir }}/{{ inventory_hostname }}.csr
@@ -71,6 +71,12 @@
     - name: Trusting certificate
       copy: 
         src: "{{ cert_dir }}/rootCA.crt"
+        dest: /etc/pki/ca-trust/source/anchors/
+        remote_src: yes
+    
+    - name: Trusting certificate
+      copy: 
+        src: /opt/registry/certs/{{ inventory_hostname }}.crt
         dest: /etc/pki/ca-trust/source/anchors/
         remote_src: yes
 

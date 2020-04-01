@@ -88,7 +88,7 @@
 
     - name: Adding external networking custom facts to {{ inventory_hostname }}
       template:
-       src: templates/interfaces.j2
+       src: ../templates/interfaces.j2
        dest: /etc/ansible/facts.d/external_connection.fact
 
 
@@ -105,7 +105,7 @@
 
     - name: Adding internal networking custom facts to {{ inventory_hostname }}
       template:
-       src: templates/interfaces.j2
+       src: ../templates/interfaces.j2
        dest: /etc/ansible/facts.d/internal_connection.fact
     
     - name: Check for custom facts on  {{ inventory_hostname }}

@@ -1,0 +1,67 @@
+---
+- name: Creating rootCa and {{ inventory_hostname }} certs
+  hosts: bastion
+  become: true
+  
+   
+  tasks:
+    - name: Ensure required packages are installed
+      package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - podman
+        - httpd-tools
+       
+    - package:
+        name: python-pip 
+        state: present
+      when: ansible_distribution != "CentOS"
+    
+
+    - name: Installing pyopenssl
+      command: pip install pyopenssl
+      when: ansible_distribution != "CentOS"
+
+    - name: Installing pyopenssl (CentOS)
+      command: pip3 install pyopenssl
+      when: ansible_distribution == "CentOS"
+   
+    - name: Refreshing certificates dir
+      file:
+        path: "{{ cert_dir }}"
+        state: absent
+    
+    - file:
+        path: "{{ cert_dir }}"
+        state: directory
+    
+    - file:
+        path: "/opt/registry/{{ item }}"
+        state: directory
+      loop:
+        - certs
+        - auth
+        - data
+   
+    
+    - name: Generate self signed
+      command: openssl req -x509  -newkey rsa:4096 -nodes -sha256 -keyout {{ cert_dir }}/{{ inventory_hostname }}.key -out {{ cert_dir }}/{{ inventory_hostname }}.crt -days 500 -subj "/C=IT/ST=MA/O=Valez./CN={{ inventory_hostname }}"
+
+    - name: Copying required certificate and key
+      copy: 
+        src: "{{ cert_dir }}/{{ item }}"
+        dest: /opt/registry/certs/
+        remote_src: yes
+      loop:
+        - "{{ inventory_hostname }}.crt"
+        - "{{ inventory_hostname }}.key"
+
+       
+    - name: Trusting certificate
+      copy: 
+        src: /opt/registry/certs/{{ inventory_hostname }}.crt
+        dest: /etc/pki/ca-trust/source/anchors/
+        remote_src: yes
+
+    - command: update-ca-trust extract
