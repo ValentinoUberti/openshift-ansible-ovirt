@@ -1,0 +1,10 @@
+#On oVirt host
+yum install https://resources.ovirt.org/pub/ovirt-4.3/rpm/el7/noarch/vdsm-hook-macspoof-4.30.43-1.el7.noarch.rpm
+hosted-engine --set-maintenance --mode=global
+
+#On oVirt engine
+engine-config -s "UserDefinedVMProperties=macspoof=true"
+systemctl restart ovirt-engine
+
+#On oVirt host
+hosted-engine --set-maintenance --mode=none
