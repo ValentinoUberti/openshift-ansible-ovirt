@@ -1,0 +1,44 @@
+---
+- name: Ovirt provisioning
+  hosts: ovirt_engine 
+  become: True
+  tasks:
+    - name: Obtain SSO token with using username/password credentials
+      ovirt_auth:
+        url: https://{{ inventory_hostname }}/ovirt-engine/api
+        username: admin@internal
+        ca_file: /etc/pki/ovirt-engine/ca.pem
+        password: toor
+
+    - name: Creating logical network
+      ovirt_network:
+        data_center: Default
+        clusters: 
+          - name: Default
+            assigned: true
+            required: false
+            display: false
+            migration: false
+            gluster: false
+        name: mynetwork
+        vm_network: true
+        auth: "{{ ovirt_auth }}"
+        state: present
+        vlan_tag: 1
+
+    - name: Assigning logical network to host network
+      ovirt_host_network:
+        auth: "{{ ovirt_auth }}"
+        name: host.mylab.com
+        interface: em1
+        #state: absent
+        networks:
+          - name: mynetwork
+            
+        
+    - name: Always revoke the SSO token
+      ovirt_auth:
+        state: absent
+        ovirt_auth: "{{ ovirt_auth }}"
+ 
+

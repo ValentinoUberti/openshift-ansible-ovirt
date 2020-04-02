@@ -4,3 +4,5 @@ lb.example.com
 [bastion]
 bastion.example.com
 
+[ovirt_engine]
+manager.mylab.com

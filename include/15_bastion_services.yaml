@@ -42,7 +42,7 @@
  
         - name: Creating seelinux rules for dnsmasq service
           copy:
-            src: files/my-dnsmasq.pp
+            src: ../files/my-dnsmasq.pp
             dest: /tmp
 
         - name: Apply seelinux rules for dnsmasq service

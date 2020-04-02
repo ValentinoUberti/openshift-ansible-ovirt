@@ -53,7 +53,7 @@
       # firewall-cmd --direct --add-rule ipv4 filter FORWARD 0 -i eth0 -o eth1 -m state --state RELATED,ESTABLISHED -j ACCEPT
       # firewall-cmd --reload
 
-    - name: Enabling masquerading on internal interface
+    - name: Enabling masquerading on public interface
       firewalld:
         masquerade: yes
         state: enabled
