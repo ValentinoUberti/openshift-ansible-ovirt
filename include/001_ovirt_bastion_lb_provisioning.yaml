@@ -1,0 +1,86 @@
+---
+- name: Ovirt provisioning
+  hosts: ovirt_engine 
+  become: True
+  tasks:
+    - name: Obtain SSO token with using username/password credentials
+      ovirt_auth:
+        url: https://{{ inventory_hostname }}/ovirt-engine/api
+        username: admin@internal
+        ca_file: /etc/pki/ovirt-engine/ca.pem
+        password: toor
+  
+    - name: Run VM with cloud init, with multiple network interfaces
+      ovirt_vm:
+        auth: "{{ ovirt_auth }}"
+        name: my_asnbile_test
+        cluster: Default
+        memory: 2GiB
+        memory_guaranteed: 2Gib
+        cpu_cores: 2
+        cpu_sockets: 2
+        #cpu_shares: 1024
+        type: server
+        template: Centos8CloudImage
+        clone: no
+        boot_devices:
+          - hd
+          
+        nics:
+          - name: eth0
+            profile_name: ovirtmgmt
+          - name: eth1
+            profile_name: openshift_net
+
+        
+
+        cloud_init:
+          root_password: toor
+          user_name: root
+          authorized_ssh_keys: "{{ lookup('file','~/.ssh/id_rsa.pub') }}"
+          regenerate_ssh_keys: yes
+          host_name: test2.example.com
+          dns_servers: 192.168.1.77
+               
+        cloud_init_nics:
+        - nic_name: eth0
+          nic_boot_protocol: static
+          nic_ip_address: 192.168.1.201
+          nic_netmask: 255.255.255.0
+          nic_gateway: 192.168.1.1
+          nic_on_boot: true
+          
+        - nic_name: eth1
+          nic_boot_protocol: none
+          nic_on_boot: false
+          
+        
+        
+        cloud_init_persist: "true"
+        
+              
+          
+    - name: Create a ticket for console for a running VM
+      ovirt_vm:
+        auth: "{{ ovirt_auth }}"
+        name: my_asnbile_test
+        ticket: true
+        state: running
+      register: myvm
+
+    - name: Save ticket to file
+      copy:
+        content: "{{ myvm.vm.remote_vv_file }}"
+        dest: ~/vvfile.vv
+      delegate_to: localhost
+
+    - name: Run remote viewer with file
+      shell: remote-viewer ~/vvfile.vv &
+      delegate_to: localhost
+    
+    - name: Always revoke the SSO token
+      ovirt_auth:
+        state: absent
+        ovirt_auth: "{{ ovirt_auth }}"
+   
+  

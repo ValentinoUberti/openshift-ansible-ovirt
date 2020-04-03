@@ -31,7 +31,7 @@
         auth: "{{ ovirt_auth }}"
         name: host.mylab.com
         interface: em1
-        #state: absent
+        state: absent
         networks:
           - name: mynetwork
             

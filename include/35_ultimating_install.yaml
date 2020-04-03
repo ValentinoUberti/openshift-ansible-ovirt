@@ -49,6 +49,7 @@
         minute: "1"
         job: "{{ workspace_directory.base_path }}/csr.sh >> /tmp/aJob.log 2>&1"
         state: present
+        user: "root"
       become: true
     
    

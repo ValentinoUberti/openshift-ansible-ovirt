@@ -10,7 +10,7 @@ MENU TITLE PXE BOOT MENU
 LABEL {{ item.label }}
   MENU LABEL {{ item.menu_label }} 
   KERNEL {{ downloads.tftp_workspace_dir }}/{{ downloads.boot.kernel }}
-  APPEND rd.neednet=1 initrd=rhcos/{{ downloads.boot.initramfs }} console=tty0 coreos.inst=yes coreos.inst.install_dev=sda coreos.inst.ignition_url=http://{{  networking.internal_network_ip }}/{{ downloads.nginix_workspace_dir }}/{{ item.ign }} coreos.inst.image_url=http://{{ networking.internal_network_ip }}/{{ downloads.nginix_workspace_dir }}/{{ downloads.boot.coreos }} ip={{ ansible_local.external_connection.ifname }}:dhcp
+  APPEND rd.neednet=1 initrd=rhcos/{{ downloads.boot.initramfs }} console=tty0 coreos.inst=yes coreos.inst.install_dev=sda coreos.inst.ignition_url=http://{{  networking.internal_network_ip }}/{{ downloads.nginix_workspace_dir }}/{{ item.ign }} coreos.inst.image_url=http://{{ networking.internal_network_ip }}/{{ downloads.nginix_workspace_dir }}/{{ downloads.boot.coreos }} ip=eth0:dhcp biosdevname=0 net.ifnames=0
 
 {% endfor %}
 

@@ -1,0 +1,74 @@
+---
+- name: Ovirt provisioning
+  hosts: ovirt_engine 
+  become: True
+  
+  pre_tasks:
+    - name: Login to oVirt
+      ovirt_auth:
+        hostname: "{{ engine_fqdn }}"
+        username: "{{ engine_user }}"
+        password: "{{ engine_password }}"
+        ca_file: "{{ engine_cafile | default(omit) }}"
+        insecure: "{{ engine_insecure | default(true) }}"
+      tags:
+        - always
+
+  vars:
+    wait_for_ip: true
+    debug_vm_create: true
+    vms:
+      - name: my_asnbile_test
+        no_log: false
+        cluster: Default
+        template: Centos8CloudImage
+        clone: no
+        memory: 2GiB
+        memory_guaranteed: 2Gib
+        cpu_cores: 2
+        cpu_sockets: 2
+        type: server
+        state: running
+       
+        boot_devices:
+          - hd
+          
+        nics:
+          - name: eth0
+            profile_name: ovirtmgmt
+          - name: eth1
+            profile_name: openshift_net
+
+        
+
+        cloud_init:
+          root_password: toor
+          user_name: root
+          authorized_ssh_keys: "{{ lookup('file','~/.ssh/id_rsa.pub') }}"
+          regenerate_ssh_keys: yes
+          host_name: test2.example.com
+          dns_servers: 192.168.1.77
+               
+        cloud_init_nics:
+        - nic_name: eth0
+          nic_boot_protocol: static
+          nic_ip_address: 192.168.1.201
+          nic_netmask: 255.255.255.0
+          nic_gateway: 192.168.1.1
+          nic_on_boot: 'true'
+          
+        - nic_name: eth1
+          nic_boot_protocol: none
+          nic_on_boot: false
+          
+        
+  roles:
+    - oVirt.vm-infra
+
+  post_tasks:
+    - name: Logout from oVirt
+      ovirt_auth:
+        state: absent
+        ovirt_auth: "{{ ovirt_auth }}"
+      tags:
+        - always
