@@ -111,4 +111,5 @@
       copy:
         content: "{{ my_dict | from_json | to_nice_json }}"
         dest: /tmp/dns-test.json
+      become: True
       

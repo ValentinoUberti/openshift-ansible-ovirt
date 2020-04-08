@@ -2,36 +2,42 @@ workspace_directory:
   base_path: /home/vale/ocpInstallerFile
   config_dir: config
   
+
 networking:
-  internal_network: 172.17.1.0
-  internal_network_ip: 172.17.1.1
+  internal_network: 172.22.0.0
+  internal_network_ip: 172.22.0.101
   internal_network_netmask: 255.255.255.0
-  external_dns: 192.168.1.77
-  domain_name: example.com
+  external_dns: 8.8.8.8
+  domain_name: example.net
 
 dhcp:
   timezone: "Europe/Rome"
-  start: 172.17.1.2
-  end: 172.17.1.50
+  start: 172.22.0.201
+  end: 172.22.0.250
   ntp: 204.11.201.10
 
 lb:
- lb_internal_network_ip: 172.17.1.2
- internal_interface_mac: "56:6f:9c:ac:00:04"
+ lb_internal_network_ip: 172.22.0.102
+ internal_interface_mac: "56:6f:3d:48:00:03"
  name: lb
 
 cluster:
-  name: myocp
-  ocp_user: admin
-  ocp_pass: mypass
+  name: ocp
+  ocp_user: vale
+  ocp_pass: toor
   bootstrap:
-      - mac: "56:6f:9c:ac:00:06"
+      - mac: "56:6f:3d:48:00:0e"
   masters:
-      - mac: "56:6f:9c:ac:00:0a"
-      - mac: "56:6f:9c:ac:00:0b"
-      - mac: "56:6f:9c:ac:00:0c"
+      - mac: "56:6f:3d:48:00:08"
+      - mac: "56:6f:3d:48:00:09"
+      - mac: "56:6f:3d:48:00:0a"
   workers:
-      - mac: "56:6f:9c:ac:00:07"
-      - mac: "56:6f:9c:ac:00:08"
-      - mac: "56:6f:9c:ac:00:09" 
+      - mac: "56:6f:3d:48:00:0b"
+      - mac: "56:6f:3d:48:00:0c"
+      - mac: "56:6f:3d:48:00:0d"
+      - mac: "56:6f:3d:48:00:11"
+      - mac: "56:6f:3d:48:00:17"
+      - mac: "56:6f:3d:48:00:18"
+      - mac: "56:6f:3d:48:00:19"
+
   pullSecret: ''

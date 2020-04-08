@@ -1,8 +1,8 @@
 [lb]
-lb.example.com
+lb.example.net
 
 [bastion]
-bastion.example.com
+bastion.example.net
 
 [ovirt_engine]
 manager.mylab.com

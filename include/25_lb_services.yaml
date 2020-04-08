@@ -13,12 +13,19 @@
           
   tasks:
     
+    - set_fact:
+        nodes_calculated_data: []
+
     - name: Calculating number of node (LoadBalancer)
       set_fact:
         number_of_nodes: "{{ nodes | length }}"
+        
     - set_fact:
         nodes_calculated_data: "{{ nodes_calculated_data + [ip_template] }}"
       with_sequence: "start=1 count={{ number_of_nodes }}"
+
+    - debug:
+        var: nodes_calculated_data
     
     - block:
 
@@ -89,6 +96,11 @@
              state: yes
              persistent: yes 
     
+         - name: Ensuring /etc/haproxy/haproxy.cfg dosen't exists
+           file:
+             path: /etc/haproxy/haproxy.cfg
+             state: absent
+
          - name: Firing haproxy template
            template:
              src: ../templates/haproxy.j2
