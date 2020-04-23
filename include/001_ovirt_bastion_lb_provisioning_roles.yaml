@@ -1,6 +1,6 @@
 ---
 - name: Ovirt provisioning
-  hosts: localhost 
+  hosts: localhost
   become: True
   gather_facts: false
 
@@ -10,23 +10,23 @@
     engine_cafile: /etc/pki/ovirt-engine/ca.pem
     engine_password: vivaOpenshift
 
+    qcow_url: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
+    template_cluster: Default
+    template_name: centos7_template_test
+    template_memory: 4GiB
+    template_cpu: 2
+    template_disk_size: 10GiB
+    template_disk_storage: big
+    template_disk_bootable: true
+    template_nics: []
+
     debug_vm_create: yes
     db_vm:
       state: running
       cluster: Default
-      #template: centos7
+      template: centos7_template_test
       memory: 2GiB
-      #memory_max: 2GiB
       memory_guaranteed: 2Gib
-      cores: 1
-      tag:
-        - db
-        - dbvm
-      disks:
-        - size: 1GiB
-          name: data
-          storage_domain: hosted_storage
-          interface: virtio
 
     vms:
       - name: aritest
@@ -36,30 +36,29 @@
           authorized_ssh_keys: "{{ lookup('file','~/.ssh/id_rsa.pub') }}"
           regenerate_ssh_keys: yes
           host_name: test2.example.com
-          dns_servers: 192.168.1.77
-          nic_on_boot: true
+          dns_servers: 172.16.0.2
 
         cloud_init_nics:
         - nic_name: eth0
           nic_boot_protocol: static
-          nic_ip_address: 192.168.1.201
+          nic_ip_address: 172.19.0.191
           nic_netmask: 255.255.255.0
-          nic_gateway: 192.168.1.1
+          nic_gateway: 172.19.0.1
           nic_on_boot: true
-          
+
         - nic_name: eth1
-          nic_boot_protocol: none
-          nic_on_boot: false
+          nic_on_boot: true
 
         nics:
           - name: eth0
             interface: virtio
-            profile_name: ovirtmgmt/ovirtmgmt
+            profile: vlan19
+            network: vlan19
 
           - name: eth1
             interface: virtio
-            profile_name: openshift_net/openshift_net
-
+            profile: vlan22
+            network: vlan22
 
 
         profile: "{{ db_vm }}"
@@ -67,25 +66,7 @@
           - pgsql
           - httpd
 
-  pre_tasks:
-    - name: Login to oVirt
-      ovirt_auth:
-        hostname: "{{ engine_fqdn }}"
-        username: "{{ engine_user }}"
-        password: "{{ engine_password }}"
-        ca_file: "{{ engine_cafile | default(omit) }}"
-        insecure: "{{ engine_insecure | default(true) }}"
-      tags:
-        - always
-
   roles:
+    - ovirt.image-template
     - ovirt.vm-infra
 
-  post_tasks:
-    - name: Logout from oVirt
-      ovirt_auth:
-        state: absent
-        ovirt_auth: "{{ ovirt_auth }}"
-      tags:
-        - always
-  
