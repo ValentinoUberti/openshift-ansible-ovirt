@@ -5,4 +5,4 @@ lb.example.net
 bastion.example.net
 
 [ovirt_engine]
-manager.mylab.com
+ovengine.righini.local
