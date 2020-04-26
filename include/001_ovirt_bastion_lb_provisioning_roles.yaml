@@ -1,7 +1,8 @@
 ---
 - name: Ovirt provisioning
-  hosts: localhost
+  hosts: ovirt_engine
   become: True
+  remote_user: vuberti
   gather_facts: false
 
   vars:
@@ -100,7 +101,7 @@
         ca_file: "{{ engine_cafile }}"
         password: "{{ engine_password }}"
     
-    - name: Ensuring {{ item }} vm is not present
+    - name: Ensuring vms are not present
       ovirt_vm:
         auth: "{{ ovirt_auth }}"
         name: "{{ item }}"
@@ -113,4 +114,23 @@
       ovirt_auth:
         state: absent
         ovirt_auth: "{{ ovirt_auth }}"
+  
+  post_tasks:
+    - name: Adding bastion and lb to inventory
+      add_host:
+        name: "{{ item }}"
+        group: bastion_lb
+      loop:
+        - "{{ bastion.public_ip }}"
+        - "{{ lb.public_ip }}"
+
+    
+
+- name: Checking ssh access
+  hosts: bastion_lb
+  remote_user: root
+  tasks:
+    - ping:
+    
         
+  
