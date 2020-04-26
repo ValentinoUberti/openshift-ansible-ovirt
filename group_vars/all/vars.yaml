@@ -16,10 +16,19 @@ dhcp:
   end: 172.22.0.250
   ntp: 204.11.201.10
 
+bastion:
+  name: bastion_test
+  public_ip: 172.19.0.191
+  public_netmask: 255.255.255.0
+  public_gateway: 172.19.0.1
+
 lb:
  lb_internal_network_ip: 172.22.0.102
  internal_interface_mac: "56:6f:3d:48:00:03"
- name: lb
+ name: lb_test
+ public_ip: 172.19.0.192
+ public_netmask: 255.255.255.0
+ public_gateway: 172.19.0.1
 
 cluster:
   name: ocp

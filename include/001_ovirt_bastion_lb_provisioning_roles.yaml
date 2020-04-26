@@ -40,20 +40,20 @@
             network: vlan22
 
     vms:
-      - name: bastion_test
+      - name: "{{ bastion.name }}"
         cloud_init:
           root_password: 'toor'
           authorized_ssh_keys: "{{ lookup('file','~/.ssh/id_rsa.pub') }}"
           regenerate_ssh_keys: yes
-          host_name: bastion_test.{{ networking.domain_name }}
+          host_name: "{{ bastion.name }}.{{ networking.domain_name }}"
           dns_servers: "{{ networking.external_dns }}"
 
         cloud_init_nics:
         - nic_name: eth0
           nic_boot_protocol: static
-          nic_ip_address: 172.19.0.191
-          nic_netmask: 255.255.255.0
-          nic_gateway: 172.19.0.1
+          nic_ip_address: "{{ bastion.public_ip }}"
+          nic_netmask: "{{ bastion.public_netmask }}"
+          nic_gateway: "{{ bastion.public_gateway }}"
           nic_on_boot: true
 
         - nic_name: eth1
@@ -64,20 +64,20 @@
 
         profile: "{{ non_ocp_vm }}"
 
-      - name: lb_test
+      - name: "{{ lb.name }}"
         cloud_init:
           root_password: 'toor'
           authorized_ssh_keys: "{{ lookup('file','~/.ssh/id_rsa.pub') }}"
           regenerate_ssh_keys: yes
-          host_name: lb_test.{{ networking.domain_name }}
+          host_name: "{{ lb.name }}.{{ networking.domain_name }}"
           dns_servers: "{{ networking.external_dns }}"
 
         cloud_init_nics:
         - nic_name: eth0
           nic_boot_protocol: static
-          nic_ip_address: 172.19.0.192
-          nic_netmask: 255.255.255.0
-          nic_gateway: 172.19.0.1
+          nic_ip_address: "{{ lb.public_ip }}"
+          nic_netmask: "{{ lb.public_netmask }}"
+          nic_gateway: "{{ lb.public_gateway }}"
           nic_on_boot: true
 
         - nic_name: eth1
