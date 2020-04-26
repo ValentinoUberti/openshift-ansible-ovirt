@@ -102,6 +102,7 @@
     
     - name: Ensuring {{ item }} vm is not present
       ovirt_vm:
+        auth: "{{ ovirt_auth }}"
         name: "{{ item }}"
         state: absent
       loop:
