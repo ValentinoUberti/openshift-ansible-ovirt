@@ -96,9 +96,9 @@
     - name: Obtain SSO token with using username/password credentials
       ovirt_auth:
         url: https://{{ engine_fqdn }}/ovirt-engine/api
-        username: admin@internal
-        ca_file: /etc/pki/ovirt-engine/ca.pem
-        password: toor
+        username: "{{ engine_user }}"
+        ca_file: "{{ engine_cafile }}"
+        password: "{{ engine_password }}"
     
     - name: Ensuring {{ item }} vm is not present
       ovirt_vm:
