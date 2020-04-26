@@ -60,7 +60,7 @@
           nic_ip_address: "{{ networking.internal_network_ip }}"
           nic_netmask: "{{ networking.internal_network_netmask }}"
           #nic_gateway: 172.19.0.1
-          nic_on_boot: false
+          nic_on_boot: true
 
         profile: "{{ non_ocp_vm }}"
 
