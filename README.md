@@ -1,4 +1,4 @@
-## Ansible Openshift UPI installer on oVirt
+## Ansible Openshift UPI installer on oVirt - Automated install
 
 Lab setup:
 
