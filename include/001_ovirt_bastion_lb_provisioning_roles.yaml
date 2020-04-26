@@ -104,6 +104,9 @@
       ovirt_vm:
         name: "{{ item }}"
         state: absent
+      loop:
+        - "{{ bastion.name }}"
+        - "{{ lb.name }}"
 
     - name: Always revoke the SSO token
       ovirt_auth:
