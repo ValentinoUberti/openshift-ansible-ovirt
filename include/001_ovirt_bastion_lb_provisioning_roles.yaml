@@ -82,7 +82,7 @@
 
         - nic_name: eth1
           nic_ip_address: "{{ lb.lb_internal_network_ip }}"
-          nic_netmask: "{{ {{ networking.internal_network_netmask }}"
+          nic_netmask: "{{ networking.internal_network_netmask }}"
           nic_on_boot: true
 
         profile: "{{ non_ocp_vm }}"
