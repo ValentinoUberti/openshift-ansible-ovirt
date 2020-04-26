@@ -12,7 +12,7 @@
 
     qcow_url: https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-GenericCloud-8.1.1911-20200113.3.x86_64.qcow2
     template_cluster: Default
-    template_name: centos7_template_test
+    template_name: centos8_template_test
     template_memory: 4GiB
     template_cpu: 2
     template_disk_size: 10GiB
@@ -25,7 +25,7 @@
     non_ocp_vm:
       state: running
       cluster: Default
-      template: centos7_template_test
+      template: centos8_template_test
       memory: 2GiB
       memory_guaranteed: 2Gib
       nics:
@@ -57,6 +57,9 @@
           nic_on_boot: true
 
         - nic_name: eth1
+          nic_ip_address: "{{ networking.internal_network_ip }}"
+          nic_netmask: "{{ networking.internal_network_netmask }}"
+          #nic_gateway: 172.19.0.1
           nic_on_boot: false
 
         profile: "{{ non_ocp_vm }}"
@@ -78,7 +81,9 @@
           nic_on_boot: true
 
         - nic_name: eth1
-          nic_on_boot: false
+          nic_ip_address: "{{ lb.lb_internal_network_ip }}"
+          nic_netmask: "{{ {{ networking.internal_network_netmask }}"
+          nic_on_boot: true
 
         profile: "{{ non_ocp_vm }}"
        
