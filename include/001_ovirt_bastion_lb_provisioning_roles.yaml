@@ -10,7 +10,7 @@
     engine_cafile: /etc/pki/ovirt-engine/ca.pem
     engine_password: vivaOpenshift
 
-    qcow_url: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2
+    qcow_url: https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-GenericCloud-8.1.1911-20200113.3.x86_64.qcow2
     template_cluster: Default
     template_name: centos7_template_test
     template_memory: 4GiB
@@ -19,37 +19,16 @@
     template_disk_storage: big
     template_disk_bootable: true
     template_nics: []
+    template_seal: false
 
     debug_vm_create: yes
-    db_vm:
+    non_ocp_vm:
       state: running
       cluster: Default
       template: centos7_template_test
       memory: 2GiB
       memory_guaranteed: 2Gib
-
-    vms:
-      - name: aritest
-        memory: 2GiB
-        cloud_init:
-          root_password: 'toor'
-          authorized_ssh_keys: "{{ lookup('file','~/.ssh/id_rsa.pub') }}"
-          regenerate_ssh_keys: yes
-          host_name: test2.example.com
-          dns_servers: 172.16.0.2
-
-        cloud_init_nics:
-        - nic_name: eth0
-          nic_boot_protocol: static
-          nic_ip_address: 172.19.0.191
-          nic_netmask: 255.255.255.0
-          nic_gateway: 172.19.0.1
-          nic_on_boot: true
-
-        - nic_name: eth1
-          nic_on_boot: true
-
-        nics:
+      nics:
           - name: eth0
             interface: virtio
             profile: vlan19
@@ -60,12 +39,49 @@
             profile: vlan22
             network: vlan22
 
+    vms:
+      - name: bastion_test
+        cloud_init:
+          root_password: 'toor'
+          authorized_ssh_keys: "{{ lookup('file','~/.ssh/id_rsa.pub') }}"
+          regenerate_ssh_keys: yes
+          host_name: bastion_test.{{ networking.domain_name }}
+          dns_servers: "{{ networking.external_dns }}"
 
-        profile: "{{ db_vm }}"
-        tag:
-          - pgsql
-          - httpd
+        cloud_init_nics:
+        - nic_name: eth0
+          nic_boot_protocol: static
+          nic_ip_address: 172.19.0.191
+          nic_netmask: 255.255.255.0
+          nic_gateway: 172.19.0.1
+          nic_on_boot: true
 
+        - nic_name: eth1
+          nic_on_boot: false
+
+        profile: "{{ non_ocp_vm }}"
+
+      - name: lb_test
+        cloud_init:
+          root_password: 'toor'
+          authorized_ssh_keys: "{{ lookup('file','~/.ssh/id_rsa.pub') }}"
+          regenerate_ssh_keys: yes
+          host_name: lb_test.{{ networking.domain_name }}
+          dns_servers: "{{ networking.external_dns }}"
+
+        cloud_init_nics:
+        - nic_name: eth0
+          nic_boot_protocol: static
+          nic_ip_address: 172.19.0.192
+          nic_netmask: 255.255.255.0
+          nic_gateway: 172.19.0.1
+          nic_on_boot: true
+
+        - nic_name: eth1
+          nic_on_boot: false
+
+        profile: "{{ non_ocp_vm }}"
+       
   roles:
     - ovirt.image-template
     - ovirt.vm-infra

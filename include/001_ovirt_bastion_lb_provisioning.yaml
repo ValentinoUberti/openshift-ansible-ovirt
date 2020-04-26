@@ -40,7 +40,7 @@
           authorized_ssh_keys: "{{ lookup('file','~/.ssh/id_rsa.pub') }}"
           regenerate_ssh_keys: yes
           host_name: test2.example.com
-          dns_servers: 192.168.1.77
+          dns_servers: "{{ networking.external_dns }}"
                
         cloud_init_nics:
         - nic_name: eth0
