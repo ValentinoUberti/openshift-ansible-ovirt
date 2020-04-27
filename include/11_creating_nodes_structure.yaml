@@ -79,14 +79,49 @@
       add_host:
         name: "DUMMY_HOST"
         nodes_calculated_data: "{{ nodes_calculated_data }}"
+        cluster_fqdn: "{{ cluster_fqdn }}"
     
 - name: Creating oVirt Openshift nodes
   hosts: ovirt_engine
   remote_user: vuberti
+  
+  vars:
+    nodes_mac_address_ip: []
+
   tasks:
     - set_fact:
         nodes_calculated_data: "{{ hostvars['DUMMY_HOST']['nodes_calculated_data'] }}"
  
+    - name: Obtain SSO token with using username/password credentials
+      ovirt_auth:
+          url: https://{{ inventory_hostname }}/ovirt-engine/api
+          username: vuberti@internal
+          ca_file: /etc/pki/ovirt-engine/ca.pem
+          password: vivaOpenshift
+
+    - name: Getting mac address of nodes
+      ovirt_nic_info:
+        auth: "{{ ovirt_auth }}"
+        vm: "{{ item.node_hostname }}"
+        fetch_nested: true
+        nested_attributes:
+          - mac
+      loop: "{{ nodes_calculated_data }}"
+      register: result
+
+  
+    - name: Pheeeega 
+      set_fact:
+        nodes_mac_address_ip: "{{ nodes_mac_address_ip + [item.ovirt_nics[0].mac.address] }}"
+      loop: "{{ result.results }}"
+
+    - debug:
+        var: nodes_mac_address_ip
+
+    - fail:
+
+      
+
     - block:
       - name: Obtain SSO token with using username/password credentials
         ovirt_auth:
