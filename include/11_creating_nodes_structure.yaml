@@ -1,0 +1,76 @@
+---
+- name: Creating a workspace on Bastion
+  hosts: localhost 
+  gather_facts: no
+
+
+  vars:
+    bootstrap: 1
+    number_of_masters: "{{ cluster['masters']  }}"
+    number_of_infra: "{{ cluster['infra']  }}"
+    number_of_workers: "{{ cluster['workers']  }}"
+    number_of_nodes: "{{ (number_of_masters | int) + ( number_of_infra | int) + ( number_of_workers | int) + bootstrap | int }}"
+    nodes_calculated_ip: []
+    masters_calculated_data: []
+    infra_calculated_data: []
+    workers_calculated_data: []
+    bootstrap_calculated_data: []
+    nodes_calculated_data: []
+    ip_template:
+      primary_ip: "{{ dhcp.start | ipmath(item | int) }}"
+      mac_address: ""
+      reverse_dns: "{{ dhcp.start | ipmath(item | int) | ipaddr('revdns')  }}"
+      node_type: ""
+      node_hostname: ""
+
+ 
+  tasks:
+    - debug:
+        var: number_of_workers
+
+    - name: Calculating all openshift nodes ip and reverse dns
+      set_fact:
+        nodes_calculated_ip: "{{ nodes_calculated_ip + [ip_template] }}"
+      with_sequence: "start=1 count={{ number_of_nodes  }}"
+
+
+    - set_fact:
+        cluster_fqdn: "{{ cluster.name }}.{{ networking.domain_name }}"
+
+    - set_fact:
+        masters_calculated_data: "{{ masters_calculated_data + [item.1 | combine( {'node_type': 'master','node_hostname':'master-'+(item.0 | string)+'.'+cluster_fqdn} )] }}"
+      with_indexed_items:
+        - "{{ nodes_calculated_ip }}"
+      when:
+        - item.0 < ( number_of_masters | int )
+
+
+    - set_fact:
+        infra_calculated_data: "{{ infra_calculated_data + [item.1 | combine( {'node_type': 'infra','node_hostname':'infra-'+(( item.0 -(number_of_masters | int))  | string)+'.'+cluster_fqdn} )] }}"
+      with_indexed_items:
+        - "{{ nodes_calculated_ip }}"
+      when:
+        - item.0 < ( (number_of_masters | int) + (number_of_infra | int) )
+        - item.0 >= ( (number_of_masters | int) )
+
+    - set_fact:
+        workers_calculated_data: "{{ workers_calculated_data + [item.1 | combine( {'node_type': 'worker','node_hostname':'worker-'+(( item.0 -(number_of_masters | int + number_of_infra | int))  | string)+'.'+cluster_fqdn} )] }}"
+      with_indexed_items:
+        - "{{ nodes_calculated_ip }}"
+      when:
+        - item.0 < ( (number_of_masters | int) + (number_of_infra | int) + (number_of_workers | int) )
+        - item.0 >= ( (number_of_masters | int) + (number_of_infra | int) )
+
+
+    - set_fact:
+        bootstrap_calculated_data: "{{ bootstrap_calculated_data + [item.1 | combine( {'node_type': 'bootstrap','node_hostname':'bootstrap'+'.'+cluster_fqdn} )] }}"
+      with_indexed_items:
+        - "{{ nodes_calculated_ip }}"
+      when:
+        - item.0 == number_of_nodes | int  - 1
+
+    - set_fact:
+        nodes_calculated_data: "{{ masters_calculated_data + infra_calculated_data + workers_calculated_data + bootstrap_calculated_data }}"
+    
+    - debug:
+        var: nodes_calculated_data
