@@ -8,7 +8,7 @@ networking:
   internal_network_ip: 172.22.0.101
   internal_network_netmask: 255.255.255.0
   external_dns: 8.8.8.8
-  domain_name: example.net
+  domain_name: lovvami.net
 
 dhcp:
   timezone: "Europe/Rome"

@@ -1,5 +1,5 @@
 ---
-- name: Creating a workspace on Bastion
+- name: Creating infrastructure code
   hosts: localhost 
   gather_facts: no
 
@@ -74,3 +74,92 @@
     
     - debug:
         var: nodes_calculated_data
+
+    - name: Register dummy host with variable
+      add_host:
+        name: "DUMMY_HOST"
+        nodes_calculated_data: "{{ nodes_calculated_data }}"
+    
+- name: Creating oVirt Openshift nodes
+  hosts: ovirt_engine
+  remote_user: vuberti
+  tasks:
+    - set_fact:
+        nodes_calculated_data: "{{ hostvars['DUMMY_HOST']['nodes_calculated_data'] }}"
+ 
+    - block:
+      - name: Obtain SSO token with using username/password credentials
+        ovirt_auth:
+          url: https://{{ inventory_hostname }}/ovirt-engine/api
+          username: vuberti@internal
+          ca_file: /etc/pki/ovirt-engine/ca.pem
+          password: vivaOpenshift
+
+      - name: Deleting disks
+        ovirt_disk:
+          auth: "{{ ovirt_auth }}"
+          name: data-{{ item.node_hostname }}
+          state: absent
+        loop: "{{ nodes_calculated_data }}"
+        
+
+      - name: Creating disks
+        ovirt_disk:
+          auth: "{{ ovirt_auth }}"
+          size: 50GiB
+          name: data-{{ item.node_hostname }}
+          interface: virtio
+          storage_domain: big
+          state: present
+          sparse: true
+          bootable: true
+        loop: "{{ nodes_calculated_data }}"
+
+        
+      - name: Ensuring openshift nodes are present on oVirt
+        ovirt_vm:
+          auth: "{{ ovirt_auth }}"
+          name: "{{ item.node_hostname }}"
+          memory: 2GiB
+          storage_domain: big
+          cpu_cores: 2
+          cpu_sockets: 2
+          type: server
+          cluster: Default
+          boot_devices:
+            - hd
+            - network
+          nics:
+            - name: eth0
+              interface: virtio
+              profile_name: vlan22
+              nic_on_boot: true
+          disks:
+           - name: data-{{ item.node_hostname }}
+             
+          state: present
+        loop: "{{ nodes_calculated_data }}"
+          
+      rescue:
+        - name: Ensuring openshift nodes are not present on oVirt
+          ovirt_vm:
+            auth: "{{ ovirt_auth }}"
+            name: "{{ item.node_hostname}}"
+            state: absent
+          loop: "{{ nodes_calculated_data }}"
+
+        - name: Deleting disks
+          ovirt_disk:
+            auth: "{{ ovirt_auth }}"
+            name: data-{{ item.node_hostname }}
+            state: absent
+          loop: "{{ nodes_calculated_data }}"
+        
+          
+
+
+
+          
+
+      
+        
