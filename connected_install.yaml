@@ -5,6 +5,7 @@
 - import_playbook: include/03_networking_pre_check.yaml
 - import_playbook: include/05_bastion_networking.yaml
 - import_playbook: include/10_bastion_workspace.yaml
+- import_playbook: include/11_creating_nodes_structure.yaml
 - import_playbook: include/12_deploy_nodes_ovirt.yaml
 #- import_playbook: include/15_bastion_services.yaml
 #- import_playbook: include/18_saving_node_data.yaml

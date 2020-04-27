@@ -1,0 +1,6 @@
+---
+- name: Testing facts
+  hosts: bastion_test.lovvami.net
+  tasks:
+    - debug:
+        var: ansible_facts.ansible_local.cluster_data

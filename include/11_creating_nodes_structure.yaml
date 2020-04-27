@@ -80,6 +80,7 @@
         name: "DUMMY_HOST"
         nodes_calculated_data: "{{ nodes_calculated_data }}"
         cluster_fqdn: "{{ cluster_fqdn }}"
+        number_of_nodes: "{{ number_of_nodes }}"
     
 - name: Creating oVirt Openshift nodes
   hosts: ovirt_engine
@@ -87,11 +88,15 @@
   
   vars:
     nodes_mac_address_ip: []
+    completed_node_data: []
 
   tasks:
     - set_fact:
         nodes_calculated_data: "{{ hostvars['DUMMY_HOST']['nodes_calculated_data'] }}"
- 
+
+    - set_fact:
+        number_of_nodes: "{{ hostvars['DUMMY_HOST']['number_of_nodes'] }}"   
+    
     - name: Obtain SSO token with using username/password credentials
       ovirt_auth:
           url: https://{{ inventory_hostname }}/ovirt-engine/api
@@ -99,28 +104,7 @@
           ca_file: /etc/pki/ovirt-engine/ca.pem
           password: vivaOpenshift
 
-    - name: Getting mac address of nodes
-      ovirt_nic_info:
-        auth: "{{ ovirt_auth }}"
-        vm: "{{ item.node_hostname }}"
-        fetch_nested: true
-        nested_attributes:
-          - mac
-      loop: "{{ nodes_calculated_data }}"
-      register: result
-
-  
-    - name: Pheeeega 
-      set_fact:
-        nodes_mac_address_ip: "{{ nodes_mac_address_ip + [item.ovirt_nics[0].mac.address] }}"
-      loop: "{{ result.results }}"
-
-    - debug:
-        var: nodes_mac_address_ip
-
-    - fail:
-
-      
+   
 
     - block:
       - name: Obtain SSO token with using username/password credentials
@@ -129,6 +113,13 @@
           username: vuberti@internal
           ca_file: /etc/pki/ovirt-engine/ca.pem
           password: vivaOpenshift
+      
+      - name: Ensuring openshift nodes are not present on oVirt
+        ovirt_vm:
+          auth: "{{ ovirt_auth }}"
+          name: "{{ item.node_hostname}}"
+          state: absent
+        loop: "{{ nodes_calculated_data }}"
 
       - name: Deleting disks
         ovirt_disk:
@@ -174,6 +165,33 @@
              
           state: present
         loop: "{{ nodes_calculated_data }}"
+
+      - name: Getting mac address of nodes
+        ovirt_nic_info:
+          auth: "{{ ovirt_auth }}"
+          vm: "{{ item.node_hostname }}"
+          fetch_nested: true
+          nested_attributes:
+            - mac
+        loop: "{{ nodes_calculated_data }}"
+        register: result
+  
+    
+      - name: Getting mac address 
+        set_fact:
+          nodes_mac_address_ip: "{{ nodes_mac_address_ip + [item.ovirt_nics[0].mac.address] }}"
+        loop: "{{ result.results }}"
+  
+      
+      - set_fact:
+          completed_node_data: "{{ completed_node_data + [item.1 | combine( {'mac_address': nodes_mac_address_ip[item.0] } )] }}"
+        with_indexed_items:
+          - "{{ nodes_calculated_data }}"
+       
+      - name: Register dummy host with variable
+        add_host:
+          name: "DUMMY_HOST_COMPLETED_DATA"
+          completed_node_data: "{{ completed_node_data }}"
           
       rescue:
         - name: Ensuring openshift nodes are not present on oVirt
@@ -191,7 +209,24 @@
           loop: "{{ nodes_calculated_data }}"
         
           
+- name: Saving cluster structure data to bastion
+  hosts: bastion
+  become: True
+  tasks:
+    - set_fact:
+        completed_node_data: "{{ hostvars['DUMMY_HOST_COMPLETED_DATA']['completed_node_data'] }}"
 
+    - name: Create fact directory
+      file:
+        path: /etc/ansible/facts.d/
+        state: directory
+        recurse: yes
+
+    - name: Saving facts to bastion
+      template:
+       src: ../templates/cluster_data.j2
+       dest: /etc/ansible/facts.d/cluster_data.fact
+      
 
 
           
