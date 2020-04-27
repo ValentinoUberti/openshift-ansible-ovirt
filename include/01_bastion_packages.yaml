@@ -15,6 +15,7 @@
           - cronie-anacron
           - python-netaddr
           - firewalld
+          - bind-utils
         state: present
       when: ansible_distribution == "Fedora"
 
@@ -31,6 +32,7 @@
           - cronie-anacron
           - tar
           - bind-utils
+          - firewalld
         state: present
       when: ansible_distribution == "CentOS"
       

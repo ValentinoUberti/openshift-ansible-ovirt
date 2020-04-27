@@ -15,6 +15,7 @@
       package:
         name:
           - policycoreutils-python-utils
+          - firewalld
         state: present
       when: ansible_distribution == "CentOS" 
     

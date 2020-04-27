@@ -1,5 +1,5 @@
 ---
-- name: Networking playbook 
+- name: Networking checks playbook 
   hosts: bastion,lb
   become: True
   tasks:
@@ -19,7 +19,14 @@
 
     - name: "Getting {{ inventory_hostname }} ip address on first interface"
       set_fact:
-        first_interface_ip: "{{ lookup('dig', ansible_host) }}"
+        first_interface_ip: "{{ bastion.public_ip }}"
+      when: "'bastion' in inventory_hostname"
+
+    - name: "Getting {{ inventory_hostname }} ip address on first interface"
+      set_fact:
+        first_interface_ip: "{{ lb.public_ip }}"
+      when: "'lb' in inventory_hostname"
+
 
     - name: Getting interface name connected to {{ first_interface_ip }}
       set_fact:

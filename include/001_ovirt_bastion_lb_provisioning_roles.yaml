@@ -58,6 +58,7 @@
           nic_on_boot: true
 
         - nic_name: eth1
+          nic_boot_protocol: static
           nic_ip_address: "{{ networking.internal_network_ip }}"
           nic_netmask: "{{ networking.internal_network_netmask }}"
           #nic_gateway: 172.19.0.1
@@ -82,6 +83,7 @@
           nic_on_boot: true
 
         - nic_name: eth1
+          nic_boot_protocol: static
           nic_ip_address: "{{ lb.lb_internal_network_ip }}"
           nic_netmask: "{{ networking.internal_network_netmask }}"
           nic_on_boot: true
@@ -116,21 +118,41 @@
         ovirt_auth: "{{ ovirt_auth }}"
   
   post_tasks:
-    - name: Adding bastion and lb to inventory
+    - name: Adding bastion ip to bastion group
       add_host:
-        name: "{{ item }}"
-        group: bastion_lb
-      loop:
-        - "{{ bastion.public_ip }}"
-        - "{{ lb.public_ip }}"
+        
+        hostname: "{{ bastion.name }}.{{ networking.domain_name }}"
+        group: bastion
+    
+    - name: Adding lb ip to lb group
+      add_host:
+        hostname: "{{ lb.name }}.{{ networking.domain_name }}"
+        group: lb
+    
 
     
 
 - name: Checking ssh access
-  hosts: bastion_lb
+  hosts: bastion, lb
   remote_user: root
   tasks:
     - ping:
-    
+    - name: Adding ansible current user to bastion and lb vm
+      user:
+        name: ansible
+        state: present
+
+    - name: "Add authorized keys"
+      authorized_key:
+        user: ansible
+        key: "{{ lookup('file','~/.ssh/id_rsa.pub') }}"
+
+    - name: "Allow admin users to sudo without a password"
+      lineinfile:
+        dest: "/etc/sudoers" 
+        state: "present"
+        line: "%ansible ALL=(ALL) NOPASSWD: ALL"
+
+      
         
   

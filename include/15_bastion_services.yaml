@@ -2,7 +2,7 @@
   hosts: bastion
   
   vars:
-    nodes: "{{ cluster['masters'] + cluster['workers']  +   cluster['bootstrap'] }}"
+    nodes: "{{ cluster['masters'] + cluster['workers']  +  cluster['bootstrap'] }}"
     number_of_nodes: "{{ nodes | length }}"
     master_nodes: "{{ cluster['masters'] }}"
     number_of_masters: "{{ master_nodes | length }}"

@@ -1,5 +1,5 @@
 workspace_directory:
-  base_path: /home/vale/ocpInstallerFile
+  base_path: /home/ansible/ocpInstallerFile
   config_dir: config
   
 

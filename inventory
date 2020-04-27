@@ -1,8 +1,5 @@
-[lb]
-lb.example.net
 
-[bastion]
-bastion.example.net
+
 
 [ovirt_engine]
 ovengine.righini.local
