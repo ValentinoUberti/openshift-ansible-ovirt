@@ -1,108 +1,75 @@
-{% set masters_mac_list = cluster["masters"] | map(attribute='mac') | list %}
-{% set workers_mac_list = cluster["workers"] | map(attribute='mac') | list %}
-{% set bootstrap_mac = cluster["bootstrap"] | map(attribute='mac') | list %}
 {% set cluster_domain = "." + cluster.name + "." + networking.domain_name %}
-
 ## External dns ##
-
 server={{ networking.external_dns }}
-
 ## External dns end ##
 
 ## LoadBalancer ##
-
 address=/{{ lb.name + cluster_domain }}/{{ lb.lb_internal_network_ip }}
 dhcp-host={{ lb.internal_interface_mac }},{{ lb.lb_internal_network_ip }}
-
 ## LoadBalancer end ##
 
 ## Required fqdn and wildcard for OCP ##
-
 address=/{{ 'api' + cluster_domain }}/{{ lb.lb_internal_network_ip }}
 address=/{{ 'apps' + cluster_domain }}/{{ lb.lb_internal_network_ip }}
 address=/{{ 'api-int' + cluster_domain }}/{{ lb.lb_internal_network_ip }}
-
 ## Required fqdn and wildcard for OCP end ##
 
 ## Bootstrap ##
-{%for node in bootstrap_mac: %}
-    {%for node_data in nodes_calculated_data: %}
-        {%if node==node_data.mac_address: %}
-        {% set host_fqdn=''.join(('bootstrap' ,cluster_domain)) %}
-
-address=/{{ host_fqdn }}/{{ node_data.primary_ip }}
-ptr-record={{ node_data.reverse_dns[:-1] }},{{ host_fqdn }}
-dhcp-host={{ node_data.mac_address }},{{  node_data.primary_ip }}
-        {%endif%}
-    {%endfor%}
-
+{%for node in completed_node_data: %}
+{%if 'bootstrap' in node.node_type: %}
+address=/{{ node.node_hostname }}/{{ node.primary_ip }}
+ptr-record={{ node.reverse_dns }},{{ node.node_hostname }}
+dhcp-host={{ node.mac_address }},{{  node.primary_ip }}
+{%endif%}
 {%endfor%}
-
 ## Bootstrap end ##
 
-
 ## Masters ##
-{%for node in masters_mac_list: %}
-    {%for node_data in nodes_calculated_data: %}
-        {%if node==node_data.mac_address: %}
-        {% set host_fqdn=''.join(('master-',masters_mac_list.index(node_data.mac_address) | string ,cluster_domain)) %}
-
-address=/{{ host_fqdn }}/{{ node_data.primary_ip }}
-ptr-record={{ node_data.reverse_dns[:-1] }},{{ host_fqdn }}
-dhcp-host={{ node_data.mac_address }},{{  node_data.primary_ip }}
-        {%endif%}
-    {%endfor%}
+{%for node in completed_node_data: %}
+{%if 'master' in node.node_type: %}
+address=/{{ node.node_hostname }}/{{ node.primary_ip }}
+ptr-record={{ node.reverse_dns }},{{ node.node_hostname }}
+dhcp-host={{ node.mac_address }},{{  node.primary_ip }}
+{%endif%}
 {%endfor%}
-
 ## Masters end ##
 
-## Etcd ##
-{%for node in masters_mac_list: %}
-    {%for node_data in nodes_calculated_data: %}
-        {%if node==node_data.mac_address: %}
-        {% set host_fqdn=''.join(('etcd-',masters_mac_list.index(node_data.mac_address) | string ,cluster_domain)) %}
-
-address=/{{ host_fqdn }}/{{ node_data.primary_ip }}
-        {%endif%}
-    {%endfor%}
+## Infra ##
+{%for node in completed_node_data: %}
+{%if 'infra' in node.node_type: %}
+address=/{{ node.node_hostname }}/{{ node.primary_ip }}
+ptr-record={{ node.reverse_dns }},{{ node.node_hostname }}
+dhcp-host={{ node.mac_address }},{{  node.primary_ip }}
+{%endif%}
 {%endfor%}
-
-## Etcd  end ##
-
+## Infra end ##
 
 ## Workers ##
-{%for node in workers_mac_list: %}
-    {%for node_data in nodes_calculated_data: %}
-        {%if node==node_data.mac_address: %}
-        {% set host_fqdn=''.join(('worker-',workers_mac_list.index(node_data.mac_address) | string ,cluster_domain)) %}
-
-address=/{{ host_fqdn }}/{{ node_data.primary_ip }}
-ptr-record={{ node_data.reverse_dns[:-1] }},{{ host_fqdn }}
-dhcp-host={{ node_data.mac_address }},{{  node_data.primary_ip }}
-        {%endif%}
-    {%endfor%}
+{%for node in completed_node_data: %}
+{%if 'worker' in node.node_type: %}
+address=/{{ node.node_hostname }}/{{ node.primary_ip }}
+ptr-record={{ node.reverse_dns }},{{ node.node_hostname }}
+dhcp-host={{ node.mac_address }},{{  node.primary_ip }}
+{%endif%}
 {%endfor%}
-
 ## Workers end ##
 
-## SRV records for etcd service. Priority must be 0 and Weight must be 10 ###
-
-{% for i in range(0, ( number_of_masters | int ) ) -%}
-srv-host=_etcd-server-ssl._tcp{{ cluster_domain }},etcd-{{ (i | string)+ cluster_domain }},2380,0,10
+## Etcd ##
+{%for node in completed_node_data: %}
+{% if 'master' in node.node_type: %}
+address=/{{ node.node_hostname | replace('master','etcd') }}/{{ node.primary_ip }}
+srv-host=_etcd-server-ssl._tcp{{ cluster_domain }},{{ node.node_hostname | replace('master','etcd') }},2380,0,10
+{%endif%}
 {%endfor%}
-
-## SRV records end ##
+## Etcd end ##
 
 ## PXE ##
-
 enable-tftp
 tftp-root=/var/lib/tftpboot,{{ ansible_local.internal_connection.ifname }}
 dhcp-boot=pxelinux.0
-
 ## PXE end ##
 
 ## DHCP ##
-
 dhcp-option=101,"{{ dhcp.timezone }}"
 domain={{ networking.domain_name }}
 no-dhcp-interface={{ ansible_local.external_connection.ifname }}
@@ -111,6 +78,5 @@ dhcp-option=option:netmask,{{ networking.internal_network_netmask }}
 dhcp-option=option:dns-server,{{ networking.internal_network_ip }}
 dhcp-option=option:ntp-server,{{ dhcp.ntp }}
 dhcp-range={{ansible_local.internal_connection.ifname }},{{ dhcp.start }},{{ dhcp.end }},12h
-
 ## DHCP end ##
 

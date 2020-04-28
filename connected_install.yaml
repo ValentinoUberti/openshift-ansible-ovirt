@@ -1,4 +1,5 @@
 ---
+- import_playbook: include/000_ovirt_net_provisioning.yaml
 - import_playbook: include/001_ovirt_bastion_lb_provisioning_roles.yaml
 - import_playbook: include/01_bastion_packages.yaml
 - import_playbook: include/02_lb_packages.yaml
@@ -7,7 +8,7 @@
 - import_playbook: include/10_bastion_workspace.yaml
 - import_playbook: include/11_creating_nodes_structure.yaml
 - import_playbook: include/12_deploy_nodes_ovirt.yaml
-#- import_playbook: include/15_bastion_services.yaml
+- import_playbook: include/15_bastion_services.yaml
 #- import_playbook: include/18_saving_node_data.yaml
 #- import_playbook: include/25_lb_services.yaml
 #- import_playbook: include/30_prepare_ocp_install.yaml

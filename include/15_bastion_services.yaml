@@ -1,34 +1,45 @@
 - name: Bastion services configuration
   hosts: bastion
-  
-  vars:
-    nodes: "{{ cluster['masters'] + cluster['workers']  +  cluster['bootstrap'] }}"
-    number_of_nodes: "{{ nodes | length }}"
-    master_nodes: "{{ cluster['masters'] }}"
-    number_of_masters: "{{ master_nodes | length }}"
-    nodes_calculated_data: []
-    ip_template:
-      primary_ip: "{{ lb.lb_internal_network_ip | ipmath(item | int) }}"
-      mac_address: "{{ nodes[ (number_of_nodes | int ) - (item | int) ].mac }}"
-      reverse_dns: "{{ lb.lb_internal_network_ip | ipmath(item | int) | ipaddr('revdns')  }}"
-      
   tasks:
     
     - name: Calculating number of node (Bastion)
       set_fact:
-        number_of_nodes: "{{ nodes | length }}"
-    - name: Setting calculated data (Bastion)
-      set_fact:
-        nodes_calculated_data: "{{ nodes_calculated_data + [ip_template] }}"
-      with_sequence: "start=1 count={{ number_of_nodes }}"
-    
+        completed_node_data: "{{ ansible_facts.ansible_local.cluster_data }}"
+        
     - block:
          
         - name: Ensuring tftp boot directory exists
           file:
             state: directory
             path: /var/lib/tftpboot/pxelinux.cfg
- 
+  
+        - name: Creating pxe mac sub dirs
+          file:
+            state: directory
+            path: /var/lib/tftpboot/pxelinux.cfg/{{ item.mac_address | replace(':','-') }}
+          loop: "{{ completed_node_data }}"
+              
+        - name: Firing pxe boot template for masters
+          template:
+            src: ../templates/pxeboot_masters.j2
+            dest: /var/lib/tftpboot/pxelinux.cfg/{{ item.mac_address | replace(':','-') }}/default
+          loop: "{{ completed_node_data }}"
+          when: "{{ 'master' in item.node_type }}"
+
+        - name: Firing pxe boot template for workers and infra
+          template:
+            src: ../templates/pxeboot_workers.j2
+            dest: /var/lib/tftpboot/pxelinux.cfg/{{ item.mac_address | replace(':','-') }}/default
+          loop: "{{ completed_node_data }}"
+          when: "{{ ('infra' in item.node_type) or ('worker' in item.node_type) }}"
+
+        - name: Firing pxe boot template for bootstrap
+          template:
+            src: ../templates/pxeboot_bootstrap.j2
+            dest: /var/lib/tftpboot/pxelinux.cfg/{{ item.mac_address | replace(':','-') }}/default
+          loop: "{{ completed_node_data }}"
+          when: "{{ ('bootstrap' in item.node_type) or ('worker' in item.node_type) }}"
+
         - name: Copy pxelinux.0 file
           command: cp /usr/share/syslinux/{{ item }} /var/lib/tftpboot/
           loop:
@@ -65,12 +76,7 @@
           template:
             src: ../templates/dnsmasq.j2
             dest: /etc/dnsmasq.conf
-
-        - name: Firing pxe boot template
-          template:
-            src: ../templates/pxeboot_default.j2
-            dest: /var/lib/tftpboot/pxelinux.cfg/default
-    
+        
         - name: Configure {{ ansible_local.external_connection.conname }} to use {{ networking.internal_network_ip }} as DNS server
           command: nmcli con mod '{{ ansible_local.external_connection.conname }}' ipv4.dns "{{ networking.internal_network_ip }}" 
 
@@ -83,8 +89,8 @@
             enabled: true
           loop: "{{ systemd_services }}"
             
-        - name: Rebooting bastion
-          reboot:
+        #- name: Rebooting bastion
+        #  reboot:
 
         
         

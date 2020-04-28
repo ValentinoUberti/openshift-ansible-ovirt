@@ -97,22 +97,13 @@
     - set_fact:
         number_of_nodes: "{{ hostvars['DUMMY_HOST']['number_of_nodes'] }}"   
     
-    - name: Obtain SSO token with using username/password credentials
-      ovirt_auth:
-          url: https://{{ inventory_hostname }}/ovirt-engine/api
-          username: vuberti@internal
-          ca_file: /etc/pki/ovirt-engine/ca.pem
-          password: vivaOpenshift
-
-   
-
     - block:
       - name: Obtain SSO token with using username/password credentials
         ovirt_auth:
           url: https://{{ inventory_hostname }}/ovirt-engine/api
-          username: vuberti@internal
-          ca_file: /etc/pki/ovirt-engine/ca.pem
-          password: vivaOpenshift
+          username: "{{ ovirt.username }}"
+          ca_file: "{{ ovirt.ca_file }}"
+          password: "{{ ovirt.password }}"
       
       - name: Ensuring openshift nodes are not present on oVirt
         ovirt_vm:
@@ -134,8 +125,8 @@
           auth: "{{ ovirt_auth }}"
           size: 50GiB
           name: data-{{ item.node_hostname }}
-          interface: virtio
-          storage_domain: big
+          interface: "{{ ovirt.storage.interface }}"
+          storage_domain: "{{ ovirt.storage.big }}"
           state: present
           sparse: true
           bootable: true
@@ -147,18 +138,18 @@
           auth: "{{ ovirt_auth }}"
           name: "{{ item.node_hostname }}"
           memory: 2GiB
-          storage_domain: big
+          storage_domain: "{{ ovirt.storage.big }}"
           cpu_cores: 2
           cpu_sockets: 2
           type: server
-          cluster: Default
+          cluster: "{{ ovirt.cluster }}"
           boot_devices:
             - hd
             - network
           nics:
             - name: eth0
-              interface: virtio
-              profile_name: vlan22
+              interface: "{{ ovirt.network.internal.host_interface }}"
+              profile_name: "{{ ovirt.network.internal.profile }}" 
               nic_on_boot: true
           disks:
            - name: data-{{ item.node_hostname }}

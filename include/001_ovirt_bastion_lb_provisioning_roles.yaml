@@ -7,12 +7,12 @@
 
   vars:
     engine_fqdn: ovengine.righini.local
-    engine_user: vuberti@internal
-    engine_cafile: /etc/pki/ovirt-engine/ca.pem
-    engine_password: vivaOpenshift
+    engine_user:  "{{ ovirt.username }}"
+    engine_cafile: "{{ ovirt.ca_file }}"
+    engine_password: "{{ ovirt.password }}"
 
     qcow_url: https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-GenericCloud-8.1.1911-20200113.3.x86_64.qcow2
-    template_cluster: Default
+    template_cluster: "{{ ovirt.cluster }}"
     template_name: centos8_template_test
     template_memory: 4GiB
     template_cpu: 2
@@ -31,14 +31,14 @@
       memory_guaranteed: 2Gib
       nics:
           - name: eth0
-            interface: virtio
-            profile: vlan19
-            network: vlan19
+            interface: "{{ ovirt.network.external.interface }}" 
+            profile: "{{ ovirt.network.external.profile }}" 
+            network: "{{ ovirt.network.external.network }}" 
 
           - name: eth1
-            interface: virtio
-            profile: vlan22
-            network: vlan22
+            interface: "{{ ovirt.network.external.interface }}" 
+            profile: "{{ ovirt.network.internal.profile }}"
+            network: "{{ ovirt.network.internal.network }}"
 
     vms:
       - name: "{{ bastion.name }}"
@@ -61,7 +61,6 @@
           nic_boot_protocol: static
           nic_ip_address: "{{ networking.internal_network_ip }}"
           nic_netmask: "{{ networking.internal_network_netmask }}"
-          #nic_gateway: 172.19.0.1
           nic_on_boot: true
 
         profile: "{{ non_ocp_vm }}"

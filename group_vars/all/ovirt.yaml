@@ -1,0 +1,20 @@
+ovirt:
+  username: vuberti@internal
+  ca_file: /etc/pki/ovirt-engine/ca.pem
+  password: vivaOpenshift
+  data_center: Default
+  cluster: Default
+  host: host.mylab.com
+  storage:
+     interface: virtio
+     storage_domain: big
+  network:
+    external:
+       interface: virtio
+       profile: vlan19
+       network: vlan19
+    internal:
+       interface: virtio
+       profile: vlan22Test
+       network: vlan22Test
+       host_interface: em1

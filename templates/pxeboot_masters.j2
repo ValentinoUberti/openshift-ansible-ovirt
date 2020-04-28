@@ -1,0 +1,14 @@
+UI menu.c32 
+DEFAULT LOCAL 
+PROMPT 0
+TIMEOUT 15
+ONTIMEOUT LOCAL
+MENU TITLE PXE BOOT MENU
+
+LABEL MASTER NODE
+  MENU LABEL Install MASTER
+  KERNEL {{ downloads.tftp_workspace_dir }}/{{ downloads.boot.kernel }}
+  APPEND rd.neednet=1 initrd=rhcos/{{ downloads.boot.initramfs }} console=tty0 coreos.inst=yes coreos.inst.install_dev=sda coreos.inst.ignition_url=http://{{  networking.internal_network_ip }}/{{ downloads.nginix_workspace_dir }}/master.ign coreos.inst.image_url=http://{{ networking.internal_network_ip }}/{{ downloads.nginix_workspace_dir }}/{{ downloads.boot.coreos }} ip=dhcp
+
+
+
