@@ -8,9 +8,12 @@
 - import_playbook: include/10_bastion_workspace.yaml
 - import_playbook: include/11_creating_nodes_structure.yaml
 - import_playbook: include/15_bastion_services.yaml
-#- import_playbook: include/18_saving_node_data.yaml
-#- import_playbook: include/25_lb_services.yaml
-#- import_playbook: include/30_prepare_ocp_install.yaml
+- import_playbook: include/25_lb_services.yaml
+- import_playbook: include/30_prepare_ocp_install.yaml
+- import_playbook: include/33_creating_igns.yaml
+- import_playbook: include/35_starting_nodes.yaml
+- import_playbook: include/38_wait_for_install.yaml
+
 #- import_playbook: include/35_ultimating_install.yaml
-#- import_playbook: include/40_deploy_nfs_server.yaml
-#- import_playbook: include/50_create_default_admin.yaml
+- import_playbook: include/40_deploy_nfs_server.yaml
+- import_playbook: include/50_create_default_admin.yaml

@@ -137,10 +137,10 @@
         ovirt_vm:
           auth: "{{ ovirt_auth }}"
           name: "{{ item.node_hostname }}"
-          memory: 2GiB
+          memory: 16GiB
           storage_domain: "{{ ovirt.storage.storage_domain }}"
-          cpu_cores: 2
-          cpu_sockets: 2
+          cpu_cores: 4
+          cpu_sockets: 4
           type: server
           cluster: "{{ ovirt.cluster }}"
           boot_devices:
@@ -153,6 +153,7 @@
               nic_on_boot: true
           disks:
            - name: data-{{ item.node_hostname }}
+             bootable: true
              
           state: present
         loop: "{{ nodes_calculated_data }}"
@@ -218,7 +219,23 @@
        src: ../templates/cluster_data.j2
        dest: /etc/ansible/facts.d/cluster_data.fact
       
+- name: Saving cluster structure data to lb
+  hosts: lb
+  become: True
+  tasks:
+    - set_fact:
+        completed_node_data: "{{ hostvars['DUMMY_HOST_COMPLETED_DATA']['completed_node_data'] }}"
 
+    - name: Create fact directory
+      file:
+        path: /etc/ansible/facts.d/
+        state: directory
+        recurse: yes
+
+    - name: Saving facts to lb
+      template:
+       src: ../templates/cluster_data.j2
+       dest: /etc/ansible/facts.d/cluster_data.fact
 
           
 

@@ -1,0 +1,20 @@
+- name: Checking ssh access
+  hosts: bastion, lb
+  remote_user: root
+  tasks:
+    - ping:
+    - name: Adding ansible current user to bastion and lb vm
+      user:
+        name: ansible
+        state: present
+
+    - name: "Add authorized keys"
+      authorized_key:
+        user: ansible
+        key: "{{ lookup('file','~/.ssh/id_rsa.pub') }}"
+
+    - name: "Allow admin users to sudo without a password"
+      lineinfile:
+        dest: "/etc/sudoers" 
+        state: "present"
+        line: "%ansible ALL=(ALL) NOPASSWD: ALL"

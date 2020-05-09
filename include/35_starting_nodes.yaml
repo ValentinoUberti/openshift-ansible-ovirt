@@ -1,0 +1,75 @@
+---
+- name: Getting nodes data
+  hosts: bastion
+  tasks:
+    - set_fact:
+        completed_node_data: "{{ ansible_facts.ansible_local.cluster_data }}"
+    - add_host:
+        name: "DUMMY_HOST"
+        nodes_calculated_data: "{{ completed_node_data }}"
+    
+
+
+- name: Creating oVirt Openshift nodes
+  hosts: ovirt_engine
+  remote_user: "{{ ovirt_engine_ssh_user }}"
+  tasks:
+    - set_fact:
+        nodes_calculated_data: "{{ hostvars['DUMMY_HOST']['nodes_calculated_data'] }}"
+
+    - block:
+      - name: Obtain SSO token with using username/password credentials
+        ovirt_auth:
+          url: https://{{ inventory_hostname }}/ovirt-engine/api
+          username: "{{ ovirt.username }}"
+          ca_file: "{{ ovirt.ca_file }}"
+          password: "{{ ovirt.password }}"
+      
+      - name: Firing up bootstrap node
+        ovirt_vm:
+          auth: "{{ ovirt_auth }}"
+          name: "{{ item.node_hostname}}"
+          state: running
+        loop: "{{ nodes_calculated_data }}"
+        when: item.node_hostname is search("bootstrap")
+
+      - pause:
+          minutes: 5
+          prompt: Giving time to bootstrap to boot
+
+      - name: Firing up master nodes
+        ovirt_vm:
+          auth: "{{ ovirt_auth }}"
+          name: "{{ item.node_hostname}}"
+          state: running
+        loop: "{{ nodes_calculated_data }}"
+        when: item.node_hostname is search("master")
+
+      - pause:
+          minutes: 10
+          prompt: Giving time to masters to boot
+
+
+
+      - name: Firing up infra nodes
+        ovirt_vm:
+          auth: "{{ ovirt_auth }}"
+          name: "{{ item.node_hostname}}"
+          state: running
+        loop: "{{ nodes_calculated_data }}"
+        when: item.node_hostname is search("infra")
+
+      - pause:
+          minutes: 10
+          prompt: Giving time to infra to boot
+
+
+      - name: Firing up worker nodes
+        ovirt_vm:
+          auth: "{{ ovirt_auth }}"
+          name: "{{ item.node_hostname}}"
+          state: running
+        loop: "{{ nodes_calculated_data }}"
+        when: item.node_hostname is search("worker")
+
+    

@@ -1,32 +1,15 @@
 ---
 - name: Haproxy  configuration
   hosts: lb 
- 
   vars:
-    nodes: "{{ cluster['masters'] + cluster['workers']  + cluster['bootstrap'] }}"
-    number_of_nodes: "{{ nodes | length }}"
-    nodes_calculated_data: []
-    ip_template:
-      primary_ip: "{{ lb.lb_internal_network_ip | ipmath(item | int) }}"
-      mac_address: "{{ nodes[ (number_of_nodes | int ) - (item | int) ].mac }}"
     internal_ip_and_mask: "{{ networking.internal_network_ip }}/{{ networking.internal_network_netmask }}"
-          
+           
   tasks:
-    
-    - set_fact:
-        nodes_calculated_data: []
 
-    - name: Calculating number of node (LoadBalancer)
+    - name: Calculating number of node (Lb)
       set_fact:
-        number_of_nodes: "{{ nodes | length }}"
-        
-    - set_fact:
-        nodes_calculated_data: "{{ nodes_calculated_data + [ip_template] }}"
-      with_sequence: "start=1 count={{ number_of_nodes }}"
-
-    - debug:
-        var: nodes_calculated_data
-    
+        completed_node_data: "{{ ansible_facts.ansible_local.cluster_data }}"
+          
     - block:
 
          - name: Checking internal network interfaces
@@ -111,7 +94,22 @@
              name: haproxy
              state: restarted
              enabled: true
+
+         - name: Removing resolv.conf
+           file:
+             path: /etc/resolv.conf
+             state: absent
+
+         - name: Configure {{ ansible_local.external_connection.conname }} to use {{ networking.internal_network_ip }} as DNS server
+           command: nmcli con mod '{{ ansible_local.external_connection.conname }}' ipv4.dns "{{ networking.internal_network_ip }}" 
+
+         - name: Refreshing {{ ansible_local.external_connection.conname }}
+           shell: nmcli con down "{{ ansible_local.external_connection.conname }}"; nmcli con up "{{ ansible_local.external_connection.conname }}" 
         
+         - name: Setting global dns
+           copy:
+             dest: /etc/resolv.conf
+             content: "nameserver {{ networking.internal_network_ip }}"
       become: True
 
     

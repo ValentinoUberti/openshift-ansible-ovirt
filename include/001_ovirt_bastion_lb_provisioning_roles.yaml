@@ -128,14 +128,28 @@
         hostname: "{{ lb.name }}.{{ networking.domain_name }}"
         group: lb
     
+    - name: Wait for ssh connection for bastion 
+      wait_for:
+        port: 22
+        host: "{{ bastion.name }}.{{ networking.domain_name }}"
+        search_regex: OpenSSH
+        delay: 10
+      connection: local
 
+    - name: Wait for ssh connection for lb
+      wait_for:
+        port: 22
+        host: "{{ lb.name }}.{{ networking.domain_name }}"
+        search_regex: OpenSSH
+        delay: 10
+      connection: local
+    
     
 
 - name: Checking ssh access
   hosts: bastion, lb
   remote_user: root
   tasks:
-    - ping:
     - name: Adding ansible current user to bastion and lb vm
       user:
         name: ansible
