@@ -1,5 +1,6 @@
-engine_password: toor
+engine_password: vivaOpenshift
 engine_fqdn: "{{ inventory_hostname }}"
-engine_user: admin@internal
+engine_user: vuberti@internal
 engine_cafile: /etc/pki/ovirt-engine/ca.pem
+ovirt_engine_ssh_user: vuberti
 

@@ -10,9 +10,7 @@ downloads:
     ocp_installer: openshift-install-linux.tar.gz
   boot:
     base_url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/latest/latest/ 
-    initramfs: rhcos-4.3.8-x86_64-installer-initramfs.x86_64.img
-    kernel: rhcos-4.3.8-x86_64-installer-kernel-x86_64
-    coreos: rhcos-4.3.8-x86_64-metal.x86_64.raw.gz
+    
 disconnected:
   product_repo: 'openshift-release-dev'
   release_name: 'ocp-release'

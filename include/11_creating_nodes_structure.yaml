@@ -84,7 +84,7 @@
     
 - name: Creating oVirt Openshift nodes
   hosts: ovirt_engine
-  remote_user: vuberti
+  remote_user: "{{ ovirt_engine_ssh_user }}"
   
   vars:
     nodes_mac_address_ip: []

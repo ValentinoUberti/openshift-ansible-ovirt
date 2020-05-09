@@ -5,6 +5,21 @@
     - name: Calculating number of node (Bastion)
       set_fact:
         completed_node_data: "{{ ansible_facts.ansible_local.cluster_data }}"
+
+    - name: Fetching release name
+      uri:
+        url: "{{ downloads.boot.base_url }}/sha256sum.txt"
+        return_content: yes
+      register: ocp_version
+
+    - set_fact:
+        installer_initramfs: '{{ ocp_version.content | regex_search("rhcos(.*)installer-initramfs(.*)") }}'
+
+    - set_fact:
+        installer_kernel: '{{ ocp_version.content | regex_search("rhcos(.*)installer-kernel(.*)") }}'
+
+    - set_fact:
+        coreos: '{{ ocp_version.content | regex_search("rhcos(.*)metal(.*)") }}'
         
     - block:
          
@@ -13,32 +28,28 @@
             state: directory
             path: /var/lib/tftpboot/pxelinux.cfg
   
-        - name: Creating pxe mac sub dirs
-          file:
-            state: directory
-            path: /var/lib/tftpboot/pxelinux.cfg/{{ item.mac_address | replace(':','-') }}
-          loop: "{{ completed_node_data }}"
+        
               
         - name: Firing pxe boot template for masters
           template:
             src: ../templates/pxeboot_masters.j2
-            dest: /var/lib/tftpboot/pxelinux.cfg/{{ item.mac_address | replace(':','-') }}/default
+            dest: /var/lib/tftpboot/pxelinux.cfg/01-{{ item.mac_address | replace(':','-') }}
           loop: "{{ completed_node_data }}"
           when: "{{ 'master' in item.node_type }}"
 
         - name: Firing pxe boot template for workers and infra
           template:
             src: ../templates/pxeboot_workers.j2
-            dest: /var/lib/tftpboot/pxelinux.cfg/{{ item.mac_address | replace(':','-') }}/default
+            dest: /var/lib/tftpboot/pxelinux.cfg/01-{{ item.mac_address | replace(':','-') }}
           loop: "{{ completed_node_data }}"
           when: "{{ ('infra' in item.node_type) or ('worker' in item.node_type) }}"
 
         - name: Firing pxe boot template for bootstrap
           template:
             src: ../templates/pxeboot_bootstrap.j2
-            dest: /var/lib/tftpboot/pxelinux.cfg/{{ item.mac_address | replace(':','-') }}/default
+            dest: /var/lib/tftpboot/pxelinux.cfg/01-{{ item.mac_address | replace(':','-') }}
           loop: "{{ completed_node_data }}"
-          when: "{{ ('bootstrap' in item.node_type) or ('worker' in item.node_type) }}"
+          when: "{{ ('bootstrap' in item.node_type) }}"
 
         - name: Copy pxelinux.0 file
           command: cp /usr/share/syslinux/{{ item }} /var/lib/tftpboot/
@@ -89,8 +100,8 @@
             enabled: true
           loop: "{{ systemd_services }}"
             
-        #- name: Rebooting bastion
-        #  reboot:
+        - name: Rebooting bastion
+          reboot:
 
         
         

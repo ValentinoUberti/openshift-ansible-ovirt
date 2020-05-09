@@ -88,15 +88,15 @@
             url: "{{ downloads.boot.base_url + item }}"
             dest: "{{ downloads.tftp_boot_root }}/{{ downloads.tftp_workspace_dir }}/{{ item }}"
           loop:
-            - "{{ downloads.boot.initramfs }}"
-            - "{{ downloads.boot.kernel }}"
+            - "{{ installer_initramfs }}"
+            - "{{ installer_kernel }}"
           retries: 10
       
 
         - name: Download Red Hat CoreOS for bare metal
           get_url:
-            url:  "{{ downloads.boot.base_url + downloads.boot.coreos }}"
-            dest: "{{ downloads.ngnix_document_root }}/{{ downloads.nginix_workspace_dir }}/{{ downloads.boot.coreos }}"
+            url:  "{{ downloads.boot.base_url + coreos }}"
+            dest: "{{ downloads.ngnix_document_root }}/{{ downloads.nginix_workspace_dir }}/{{ coreos }}"
           retries: 10
       when: not (skip_download | bool)
       become: true
