@@ -4,6 +4,22 @@
   gather_facts: no
   tasks:
 
+    - name: Fetching release name
+      uri:
+        url: "{{ downloads.boot.base_url }}/sha256sum.txt"
+        return_content: yes
+      register: ocp_version
+
+    - set_fact:
+        installer_initramfs: '{{ ocp_version.content | regex_search("rhcos(.*)installer-initramfs(.*)") }}'
+
+    - set_fact:
+        installer_kernel: '{{ ocp_version.content | regex_search("rhcos(.*)installer-kernel(.*)") }}'
+
+    - set_fact:
+        coreos: '{{ ocp_version.content | regex_search("rhcos(.*)metal(.*)") }}'
+   
+    
     - name: Erasing dnsmasq lease
       file:
         path: /var/lib/dnsmasq/dnsmasq.leases

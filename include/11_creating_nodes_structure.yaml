@@ -126,7 +126,7 @@
           size: 50GiB
           name: data-{{ item.node_hostname }}
           interface: "{{ ovirt.storage.interface }}"
-          storage_domain: "{{ ovirt.storage.big }}"
+          storage_domain: "{{ ovirt.storage.storage_domain }}"
           state: present
           sparse: true
           bootable: true
@@ -138,7 +138,7 @@
           auth: "{{ ovirt_auth }}"
           name: "{{ item.node_hostname }}"
           memory: 2GiB
-          storage_domain: "{{ ovirt.storage.big }}"
+          storage_domain: "{{ ovirt.storage.storage_domain }}"
           cpu_cores: 2
           cpu_sockets: 2
           type: server
@@ -148,7 +148,7 @@
             - network
           nics:
             - name: eth0
-              interface: "{{ ovirt.network.internal.host_interface }}"
+              interface: "{{ ovirt.network.internal.interface }}"
               profile_name: "{{ ovirt.network.internal.profile }}" 
               nic_on_boot: true
           disks:

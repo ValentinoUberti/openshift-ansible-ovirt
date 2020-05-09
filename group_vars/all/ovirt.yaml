@@ -4,7 +4,7 @@ ovirt:
   password: vivaOpenshift
   data_center: Default
   cluster: Default
-  host: host.mylab.com
+  host: ovirt.righini.local
   storage:
      interface: virtio
      storage_domain: big
@@ -17,4 +17,4 @@ ovirt:
        interface: virtio
        profile: vlan22Test
        network: vlan22Test
-       host_interface: em1
+       host_interface: eno2
