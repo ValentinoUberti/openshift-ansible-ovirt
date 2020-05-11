@@ -1,0 +1,19 @@
+- name: Create nfs share and registry pv
+  hosts: bastion
+  become: True
+  tasks:
+   
+    - name: Patching registry operator
+      template:
+        src: ../templates/patch_infra.j2
+        dest: /tmp/patch_infra.sh
+        mode: '0755'
+      
+    - command: /tmp/patch_infra.sh
+
+    - name: Deleting temp files
+      file:
+        path: /tmp/patch_registry.sh
+        state: absent
+    
+               

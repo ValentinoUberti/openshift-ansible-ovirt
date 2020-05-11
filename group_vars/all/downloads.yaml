@@ -6,8 +6,8 @@ downloads:
   nginix_workspace_dir: metal
   utils:
     base_url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/
-    ocp_oc_cli: openshift-client-linux-4.4.3.tar.gz
-    ocp_installer: openshift-install-linux-4.4.3.tar.gz
+    ocp_oc_cli: openshift-client-linux.tar.gz
+    ocp_installer: openshift-install-linux.tar.gz
   boot:
     base_url: https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/latest/latest/ 
     

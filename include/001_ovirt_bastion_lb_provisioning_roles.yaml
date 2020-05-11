@@ -133,7 +133,7 @@
         port: 22
         host: "{{ bastion.name }}.{{ networking.domain_name }}"
         search_regex: OpenSSH
-        delay: 10
+        delay: 20
       connection: local
 
     - name: Wait for ssh connection for lb
@@ -141,7 +141,7 @@
         port: 22
         host: "{{ lb.name }}.{{ networking.domain_name }}"
         search_regex: OpenSSH
-        delay: 10
+        delay: 20
       connection: local
     
     

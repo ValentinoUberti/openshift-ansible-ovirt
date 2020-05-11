@@ -1,0 +1,11 @@
+#!/bin/bash
+{%for node in ansible_facts.ansible_local.cluster_data: %}
+{%if node.node_type=='infra': %}
+/usr/local/bin/oc label node  {{ node.node_hostname }} node-role.kubernetes.io/worker- --kubeconfig={{ workspace_directory.base_path }}/config/auth/kubeconfig
+/usr/local/bin/oc label node  {{ node.node_hostname }} node-role.kubernetes.io/infra="" --kubeconfig={{ workspace_directory.base_path }}/config/auth/kubeconfig --overwrite=true
+{%endif%}
+{%endfor%}
+/usr/local/bin/oc patch ingresscontroller default -n openshift-ingress-operator --type=json -p '[{"op": "replace", "path": "/spec","value":{"nodePlacement":{"nodeSelector":{"matchLabels":{"node-role.kubernetes.io/infra":""}}}}}]' --kubeconfig={{ workspace_directory.base_path }}/config/auth/kubeconfig
+/usr/local/bin/oc patch ingresscontroller default -n openshift-ingress-operator --type=merge -p '{"spec":{"replicas":3}}' --kubeconfig={{ workspace_directory.base_path }}/config/auth/kubeconfig
+/usr/local/bin/oc patch config cluster --type=merge -p '{"spec":{"nodeSelector":{"node-role.kubernetes.io/infra":""}}}' --kubeconfig={{ workspace_directory.base_path }}/config/auth/kubeconfig
+
