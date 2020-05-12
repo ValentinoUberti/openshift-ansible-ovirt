@@ -17,7 +17,7 @@ dhcp:
   ntp: 204.11.201.10
 
 bastion:
-  name: bastion_test
+  name: bastion
   public_ip: 172.19.0.191
   public_netmask: 255.255.255.0
   public_gateway: 172.19.0.1
@@ -25,7 +25,7 @@ bastion:
 lb:
  lb_internal_network_ip: 172.22.0.102
  internal_interface_mac: "56:6f:3d:48:00:03"
- name: lb_test
+ name: lb
  public_ip: 172.19.0.192
  public_netmask: 255.255.255.0
  public_gateway: 172.19.0.1
@@ -33,8 +33,17 @@ lb:
 cluster:
   name: bjlovers
   ocp_user: vale
-  ocp_pass: toor
+  ocp_pass: weopiurasdfòlksjdfoiuwer
   masters: 3
   infra: 3
   workers: 3
-  pullSecret: '{"auths":{"cloud.openshift.com":{"auth":"b3BlbnNoaWZ0LXJlbGVhc2UtZGV2K3ZhbGV1YmUxZWRnczVvdHppeGlxYnJtbjNuamR0YXp3dHc6SUQxNFJOTUEyOVM4S1JMNFI3R0IzWTYxVVpRNjhOUzg4T0pXTU9KWEVJNkVCUlJSRENLVktBVUZHTklVVU8wSA==","email":"vuberti@extraordy.com"},"quay.io":{"auth":"b3BlbnNoaWZ0LXJlbGVhc2UtZGV2K3ZhbGV1YmUxZWRnczVvdHppeGlxYnJtbjNuamR0YXp3dHc6SUQxNFJOTUEyOVM4S1JMNFI3R0IzWTYxVVpRNjhOUzg4T0pXTU9KWEVJNkVCUlJSRENLVktBVUZHTklVVU8wSA==","email":"vuberti@extraordy.com"},"registry.connect.redhat.com":{"auth":"NTE0OTI0MTl8dWhjLTFFRGdzNU90ekl4SXFCUm1OM05qZHRBWnd0dzpleUpoYkdjaU9pSlNVelV4TWlKOS5leUp6ZFdJaU9pSTJaR1ExWm1JNU1UQmtaVGMwWkdJMU9EZGlNREUxTWpnek5EUXhOekJrTVNKOS52SW1Vak9LRy1heTYxc2FKNmlvaEltR1Y3NFdfNms4R25YUV9yMkNSdFVIYnlGODVQRkQyLUszZ3FsOXU1d3AxSWFfbDlPaDRJLTBTQ1hPQTZBdjN4TnVZTVlIeHZoVS1GanViVGYzQ1FvWGdkZzc1R3VWS1ZiRTZHb1RYZTliZUFqaXdtRFRmc1VGa2k5ZHd6RkVoUUtZang0VXYzc1puZy1hQk1kSVB3cVNoZHltU0k5MFlaSmJpdE5xUmd2NEV0YW9nWFZ3OVN2WmJXQ2dXNW1zZTlSMnpxM2tGZ2FjYkwwT1lMQmFtTFhxVG9BT0JRWDNJMDZNTTR3eDNsOU1VOTBZaDYxQll2VHVqcmJSd05NWFVPdEpmaW54VEFCbUhfaVBPYXMyRlhuX2xuNlJJaEQxaTBjVm1CWXctN3E1OG9xODRROFg5M2ZQZFhhLVRwcEpDLTNhaDR1aTJOakIwY0hLNVFKa2k4ZTE3ck1BdVhwdkVKTHVVM0FFazh1Y2hEbnhhTmE1UVk4UF85blp1dWZYZUNGZHVWXzRoNHdwMjJWN3dKZklSdnhlTjVuSmEzREFTQWdTb1h2VHFQSjQwcmpCZWxqQmdsMkpyeFdsb2hldnpfNUdFMEE3dTZwbGh4RjFMamlqY1ZuSDZBWi1vc3lTSWxqY244NVl1bk15blJ1cnBqd1gwOFZFNUpnMkVLclZKNTB6UURSQk1EM2RkTGw0c1BEbVJIY1dlMVRGYXhRZUlfSDlBd2QydUkxR05RclkyU0ZONWp4ZmEyaTliT0VEclFKTktZQ1RMY0NlT1pwSFJyeWJzdE8zU0IzODBoVXByaVdlNGZYOVJweWFwRE1JeXU0dmstOU9vYXBwelQyMUs1ZW9EWUFoLVBnMjZ3YVBzTEh5R0xqSQ==","email":"vuberti@extraordy.com"},"registry.redhat.io":{"auth":"NTE0OTI0MTl8dWhjLTFFRGdzNU90ekl4SXFCUm1OM05qZHRBWnd0dzpleUpoYkdjaU9pSlNVelV4TWlKOS5leUp6ZFdJaU9pSTJaR1ExWm1JNU1UQmtaVGMwWkdJMU9EZGlNREUxTWpnek5EUXhOekJrTVNKOS52SW1Vak9LRy1heTYxc2FKNmlvaEltR1Y3NFdfNms4R25YUV9yMkNSdFVIYnlGODVQRkQyLUszZ3FsOXU1d3AxSWFfbDlPaDRJLTBTQ1hPQTZBdjN4TnVZTVlIeHZoVS1GanViVGYzQ1FvWGdkZzc1R3VWS1ZiRTZHb1RYZTliZUFqaXdtRFRmc1VGa2k5ZHd6RkVoUUtZang0VXYzc1puZy1hQk1kSVB3cVNoZHltU0k5MFlaSmJpdE5xUmd2NEV0YW9nWFZ3OVN2WmJXQ2dXNW1zZTlSMnpxM2tGZ2FjYkwwT1lMQmFtTFhxVG9BT0JRWDNJMDZNTTR3eDNsOU1VOTBZaDYxQll2VHVqcmJSd05NWFVPdEpmaW54VEFCbUhfaVBPYXMyRlhuX2xuNlJJaEQxaTBjVm1CWXctN3E1OG9xODRROFg5M2ZQZFhhLVRwcEpDLTNhaDR1aTJOakIwY0hLNVFKa2k4ZTE3ck1BdVhwdkVKTHVVM0FFazh1Y2hEbnhhTmE1UVk4UF85blp1dWZYZUNGZHVWXzRoNHdwMjJWN3dKZklSdnhlTjVuSmEzREFTQWdTb1h2VHFQSjQwcmpCZWxqQmdsMkpyeFdsb2hldnpfNUdFMEE3dTZwbGh4RjFMamlqY1ZuSDZBWi1vc3lTSWxqY244NVl1bk15blJ1cnBqd1gwOFZFNUpnMkVLclZKNTB6UURSQk1EM2RkTGw0c1BEbVJIY1dlMVRGYXhRZUlfSDlBd2QydUkxR05RclkyU0ZONWp4ZmEyaTliT0VEclFKTktZQ1RMY0NlT1pwSFJyeWJzdE8zU0IzODBoVXByaVdlNGZYOVJweWFwRE1JeXU0dmstOU9vYXBwelQyMUs1ZW9EWUFoLVBnMjZ3YVBzTEh5R0xqSQ==","email":"vuberti@extraordy.com"}}}'
+  pullSecret: ''
+  proxy:
+    httpProxy: http://<username>:<pswd>@<ip>:<port> 
+    httpsProxy: http://<username>:<pswd>@<ip>:<port> 
+    noProxy: example.com 
+  additionalTrustBundle: |
+        -----BEGIN CERTIFICATE-----
+       
+        -----END CERTIFICATE-----
+        

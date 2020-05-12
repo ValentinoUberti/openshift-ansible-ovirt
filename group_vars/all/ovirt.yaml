@@ -1,7 +1,7 @@
 ovirt:
   username: vuberti@internal
   ca_file: /etc/pki/ovirt-engine/ca.pem
-  password: vivaOpenshift
+  password: dfadfsdfsa
   data_center: Default
   cluster: Default
   host: ovirt.righini.local
@@ -18,3 +18,9 @@ ovirt:
        profile: vlan22Test
        network: vlan22Test
        host_interface: eno2
+
+engine_password: sdaffdsdfdfs
+engine_fqdn: "{{ inventory_hostname }}"
+engine_user: vuberti@internal
+engine_cafile: /etc/pki/ovirt-engine/ca.pem
+ovirt_engine_ssh_user: vuberti

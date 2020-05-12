@@ -21,6 +21,28 @@ platform:
   none: {} 
 pullSecret: '{% if disconnected_secret is undefined %}{{ cluster.pullSecret }}{% else %}{{ disconnected_secret | to_json }}{% endif %}'
 sshKey: '{{ sshKey }}'
+
+{% if cluster.proxy is defined %}
+proxy:
+{% if cluster.proxy.httpProxy is defined %}
+  httpProxy: '{{ cluster.proxy.httpProxy }}'
+{% endif %}
+{% if cluster.proxy.httpsProxy is defined %}
+  httpsProxy: '{{ cluster.proxy.httpsProxy }}'
+{% endif %}
+{% if cluster.proxy.noProxy is defined %}
+  noProxy: '{{ cluster.proxy.noProxy }}'
+{% endif %}
+{% endif %}
+
+{% if cluster.additionalTrustBundle is defined %}
+additionalTrustBundle: |
+{% filter indent(width=4,indentfirst=True) %}
+{{ cluster.additionalTrustBundle }}
+{% endfilter %}
+{% endif %}
+
+
 {% if disconnected_secret is defined %}
 
 additionalTrustBundle: |
